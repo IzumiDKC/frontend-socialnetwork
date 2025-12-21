@@ -10,13 +10,15 @@ export class PostService {
 
   constructor(private http: HttpClient) {}
 
-  // Lấy Feed (Đã sửa URL thành /feed theo backend)
   getFeed(): Observable<any[]> {
     return this.http.get<any[]>(`${this.baseUrl}/feed`);
   }
 
-  // Đăng bài mới
   createPost(content: string): Observable<any> {
     return this.http.post(this.baseUrl, { content });
   }
+  likePost(postId: number): Observable<number> {
+    return this.http.post<number>(`${this.baseUrl}/${postId}/like`, {});
+  }
+  
 }
