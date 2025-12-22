@@ -1,38 +1,48 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
+import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { RouterOutlet } from '@angular/router';
-import { KeycloakService } from 'keycloak-angular';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, RouterOutlet], 
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive], // Import RouterLink
   styles: [`
-    .navbar { background-color: #3b5998; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
-    .brand { font-size: 1.5rem; font-weight: bold; }
-    button { background: #f02849; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; }
+    /* Header Style */
+    .navbar {
+      background-color: #ffffff;
+      border-bottom: 1px solid #ddd;
+      padding: 0 20px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky; top: 0; z-index: 1000;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .brand { font-size: 1.5rem; font-weight: bold; color: #1877f2; text-decoration: none; }
+    
+    .nav-links { display: flex; gap: 20px; }
+    .nav-item {
+      text-decoration: none; color: #65676b; font-weight: 600; padding: 8px 15px; border-radius: 5px; transition: 0.2s;
+    }
+    .nav-item:hover { background-color: #f0f2f5; }
+    
+    /* Active Link Style (Khi đang ở trang đó) */
+    .active-link { color: #1877f2; background-color: #e7f3ff; }
   `],
   template: `
-    <nav class="navbar" *ngIf="isLoggedIn">
-      <div class="brand">Social Network</div>
-      <div>
-        <button (click)="logout()">Đăng xuất</button>
+    <nav class="navbar">
+      <a routerLink="/home" class="brand">Social Network</a>
+      
+      <div class="nav-links">
+        <a routerLink="/home" routerLinkActive="active-link" class="nav-item">🏠 Trang chủ</a>
+        <a routerLink="/profile" routerLinkActive="active-link" class="nav-item">👤 Tài khoản</a>
       </div>
     </nav>
 
     <router-outlet></router-outlet>
   `
 })
-export class AppComponent implements OnInit {
-  isLoggedIn = false;
-
-  constructor(private keycloak: KeycloakService) {}
-
-  ngOnInit() {
-    this.isLoggedIn = this.keycloak.getKeycloakInstance()?.authenticated ?? false;
-  }
-
-  logout() {
-    this.keycloak.logout();
-  }
+export class AppComponent {
+  title = 'frontend-socialnetwork';
 }
