@@ -32,11 +32,11 @@ import { CommonModule } from '@angular/common';
   `],
   template: `
     <nav class="navbar">
-      <a routerLink="/home" class="brand">Social Network</a>
+      <a routerLink="/home" class="brand">VNVerse</a>
       
       <div class="nav-links">
-        <a routerLink="/home" routerLinkActive="active-link" class="nav-item">🏠 Trang chủ</a>
-        <a routerLink="/profile" routerLinkActive="active-link" class="nav-item">👤 Tài khoản</a>
+        <a routerLink="/home" routerLinkActive="active-link" class="nav-item">Trang chủ</a>
+        <a routerLink="/profile" routerLinkActive="active-link" class="nav-item">Tài khoản</a>
       </div>
     </nav>
 

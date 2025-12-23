@@ -1,0 +1,89 @@
+<div class="container">
+  <div class="left-col">
+    <div class="box">
+      <h3>Chào, {{ myUsername }}!</h3>
+      <!-- <p *ngIf="myId">UserID: <strong>{{ myId }}</strong></p> -->
+    </div>
+    <div class="box">
+      <h3>🔍 Tìm bạn bè</h3>
+      <input class="search-input" placeholder="Nhập tên..." (input)="onSearch($event)">
+      <div *ngIf="searchResults.length > 0">
+        <div *ngFor="let user of searchResults" class="user-item">
+          <span>{{ user.username }} <small *ngIf="user.id === myId">(Bạn)</small></span>
+          <div *ngIf="user.id !== myId">
+            <button *ngIf="!isFollowing(user.id)" class="btn-follow" (click)="follow(user.id)">Follow</button>
+            <button *ngIf="isFollowing(user.id)" class="btn-following">Đang Follow</button>
+          </div>
+        </div>
+      </div>
+      <div *ngIf="searchResults.length === 0 && searchTerm" style="color: gray; font-size: 0.9rem; text-align: center;">Không tìm thấy ai.</div>
+    </div>
+  </div>
+  
+  <div class="right-col">
+    <div class="box">
+      <textarea [(ngModel)]="newPostContent" placeholder="Bạn đang nghĩ gì thế?"></textarea>
+      <button class="btn-post" (click)="createPost()" [disabled]="!newPostContent.trim()">Đăng bài</button>
+    </div>
+    <button (click)="loadFeed()" style="margin-bottom: 10px; cursor: pointer; border: none; background: none; color: #1877f2;">🔄 Làm mới bảng tin</button>
+    
+    <div *ngFor="let post of posts" class="post-card">
+      <div class="post-header">
+        <div class="avatar-placeholder">{{ post.username?.charAt(0)?.toUpperCase() || 'U' }}</div>
+        <div class="post-info">
+          <h4>{{ post.username || 'Unknown User' }}</h4>
+          <span class="post-date">{{ post.createdAt | date:'medium' }}</span>
+        </div>
+      </div>
+      <div class="post-content">{{ post.content }}</div>
+      
+      <div class="post-stats">
+        <span>{{ post.likeCount }} lượt thích</span>
+        <span style="cursor: pointer" (click)="toggleComments(post)">{{ post.commentCount }} bình luận</span>
+      </div>
+      
+      <div class="post-actions">
+        <button class="action-btn" [class.liked]="post.likedByCurrentUser" (click)="onLikePost(post)">👍 Thích</button>
+        <button class="action-btn" (click)="toggleComments(post)">💬 Bình luận</button>
+      </div>
+
+      <div class="comment-section" *ngIf="post.showComments">
+        <div class="comment-input-area">
+          <div class="avatar-placeholder avatar-small">{{ myUsername.charAt(0).toUpperCase() }}</div>
+          <input class="comment-input" 
+                  placeholder="Viết bình luận..." 
+                  [(ngModel)]="post.newCommentInput" 
+                  (keyup.enter)="submitComment(post)">
+          <button class="btn-send-comment" 
+                  (click)="submitComment(post)" 
+                  [disabled]="!post.newCommentInput?.trim()">
+            Gửi
+          </button>
+        </div>
+
+        <div class="comment-list">
+          <div *ngFor="let c of post.comments" class="comment-item">
+            <div class="avatar-placeholder avatar-small" style="background: #e4e6eb; color: #555;">
+                {{ (c.userId === myId ? myUsername : 'U').charAt(0).toUpperCase() }}
+            </div>
+            
+            <div style="flex: 1;">
+                <div class="comment-bubble">
+                  <span class="comment-author">{{ c.userId === myId ? myUsername : ('User ' + c.userId) }}</span>
+                  <span class="comment-text">{{ c.content }}</span>
+                </div>
+                <div class="comment-meta">
+                  <span>{{ c.createdAt | date:'short' }}</span>
+                  <button *ngIf="c.userId === myId" class="comment-delete" (click)="deleteComment(post, c.id)">Xóa</button>
+                </div>
+            </div>
+          </div>
+          <div *ngIf="post.comments && post.comments.length === 0" style="text-align: center; font-size: 0.85rem; color: #888;">
+            Chưa có bình luận nào. Hãy là người đầu tiên!
+          </div>
+        </div>
+      </div>
+    </div>
+    <div *ngIf="posts.length === 0" style="text-align: center; color: gray; margin-top: 20px;">Chưa có bài viết nào.</div>
+  </div>
+</div>

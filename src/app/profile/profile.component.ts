@@ -34,7 +34,7 @@ import { KeycloakService } from 'keycloak-angular';
   template: `
     <div class="container">
       <div class="profile-card">
-        <h2>👤 Thông tin tài khoản</h2>
+        <h2>Thông tin tài khoản</h2>
         
         <div class="info-row">
           <span class="label">Username:</span>
@@ -86,11 +86,10 @@ export class ProfileComponent implements OnInit {
   }
 
   manageAccount() {
-    // Hàm này mở trang quản lý tài khoản mặc định của Keycloak
     this.keycloak.getKeycloakInstance().accountManagement();
   }
 
   logout() {
-    this.keycloak.logout('http://localhost:4200'); // Logout xong quay về Home
+    this.keycloak.logout('http://localhost:4200'); 
   }
 }

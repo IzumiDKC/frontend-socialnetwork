@@ -21,4 +21,15 @@ export class PostService {
     return this.http.post<number>(`${this.baseUrl}/${postId}/like`, {});
   }
   
+  getComments(postId: number): Observable<any[]> {
+    return this.http.get<any[]>(`${this.baseUrl}/${postId}/comments`);
+  }
+
+  createComment(postId: number, content: string): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/${postId}/comments`, { content });
+  }
+
+  deleteComment(commentId: number): Observable<any> {
+    return this.http.delete(`${this.baseUrl}/comments/${commentId}`, { responseType: 'text' });
+  }
 }
