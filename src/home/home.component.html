@@ -1,9 +1,8 @@
 <div class="container">
   <div class="left-col">
     <div class="box">
-      <h3>Chào, {{ myUsername }}!</h3>
-      <!-- <p *ngIf="myId">UserID: <strong>{{ myId }}</strong></p> -->
-    </div>
+      <h3>👋 Chào, {{ myUsername }}!</h3>
+      </div>
     <div class="box">
       <h3>🔍 Tìm bạn bè</h3>
       <input class="search-input" placeholder="Nhập tên..." (input)="onSearch($event)">
@@ -25,16 +24,29 @@
       <textarea [(ngModel)]="newPostContent" placeholder="Bạn đang nghĩ gì thế?"></textarea>
       <button class="btn-post" (click)="createPost()" [disabled]="!newPostContent.trim()">Đăng bài</button>
     </div>
+    
     <button (click)="loadFeed()" style="margin-bottom: 10px; cursor: pointer; border: none; background: none; color: #1877f2;">🔄 Làm mới bảng tin</button>
     
     <div *ngFor="let post of posts" class="post-card">
+      
       <div class="post-header">
         <div class="avatar-placeholder">{{ post.username?.charAt(0)?.toUpperCase() || 'U' }}</div>
         <div class="post-info">
           <h4>{{ post.username || 'Unknown User' }}</h4>
           <span class="post-date">{{ post.createdAt | date:'medium' }}</span>
         </div>
-      </div>
+
+        <div class="menu-container" *ngIf="post.userId === myId">
+          <button class="btn-menu" (click)="togglePostMenu(post)">•••</button>
+          
+          <div class="dropdown-menu" *ngIf="post.showMenu">
+            <button class="dropdown-item text-danger" (click)="deletePost(post)">
+              🗑️ Xóa bài viết
+            </button>
+          </div>
+        </div>
+        </div>
+
       <div class="post-content">{{ post.content }}</div>
       
       <div class="post-stats">
@@ -84,6 +96,7 @@
         </div>
       </div>
     </div>
+    
     <div *ngIf="posts.length === 0" style="text-align: center; color: gray; margin-top: 20px;">Chưa có bài viết nào.</div>
   </div>
 </div>
