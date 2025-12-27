@@ -32,4 +32,7 @@ export class PostService {
   deleteComment(commentId: number): Observable<any> {
     return this.http.delete(`${this.baseUrl}/comments/${commentId}`, { responseType: 'text' });
   }
+  deletePost(postId: number): Observable<any> {
+    return this.http.delete(`${this.baseUrl}/${postId}`, { responseType: 'text' });
+  }
 }

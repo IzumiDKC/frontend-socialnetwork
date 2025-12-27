@@ -81,12 +81,13 @@ export class HomeComponent implements OnInit {
     });
   }
 
-
+  // --- CẬP NHẬT: Thêm thuộc tính showMenu vào post ---
   loadFeed() {
     this.postService.getFeed().subscribe((data: any[]) => {
       this.posts = data.map(post => ({
         ...post,
-        showComments: false,     
+        showComments: false,
+        showMenu: false, // <--- QUAN TRỌNG: Mặc định ẩn menu
         comments: [],            
         newCommentInput: '' 
       }));
@@ -114,6 +115,36 @@ export class HomeComponent implements OnInit {
     });
   }
 
+  // --- CÁC HÀM XỬ LÝ MENU VÀ XÓA POST MỚI ---
+
+  togglePostMenu(post: any) {
+    // Đóng tất cả menu của các bài khác để tránh rối mắt
+    this.posts.forEach(p => {
+      if (p !== post) p.showMenu = false;
+    });
+    // Bật/tắt menu của bài hiện tại
+    post.showMenu = !post.showMenu;
+  }
+
+  deletePost(post: any) {
+    if (!confirm('Bạn có chắc chắn muốn xóa bài viết này không? Hành động này không thể hoàn tác.')) {
+      return;
+    }
+
+    this.postService.deletePost(post.id).subscribe({
+      next: () => {
+        alert('Đã xóa bài viết.');
+        // Xóa bài viết khỏi danh sách hiển thị trên giao diện ngay lập tức
+        this.posts = this.posts.filter(p => p.id !== post.id);
+      },
+      error: (err) => {
+        console.error(err);
+        alert('Lỗi khi xóa bài viết: ' + (err.message || err));
+      }
+    });
+  }
+
+  // ---------------------------------------------
 
   toggleComments(post: any) {
     post.showComments = !post.showComments;
