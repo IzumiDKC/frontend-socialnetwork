@@ -15,6 +15,15 @@ textarea { width: 100%; height: 80px; padding: 10px; border: 1px solid #e4e6eb; 
 
 .post-card { background: white; border-radius: 8px; margin-bottom: 15px; border: 1px solid #ddd; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
 .post-header { display: flex; align-items: center; padding: 12px 15px; }
+
+.avatar-img {
+    width: 40px; 
+    height: 40px; 
+    border-radius: 50%; 
+    object-fit: cover; 
+    margin-right: 10px;
+    border: 1px solid #ddd;
+}
 .avatar-placeholder { width: 40px; height: 40px; background: #ddd; border-radius: 50%; margin-right: 10px; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #555; font-size: 1.1rem; }
 
 /* Avatar nhỏ cho comment */
@@ -49,11 +58,11 @@ textarea { width: 100%; height: 80px; padding: 10px; border: 1px solid #e4e6eb; 
 @media (max-width: 768px) { .container { flex-direction: column; } .left-col, .right-col { width: 100%; } }
 
 .post-header {
-  position: relative; /* Để menu con định vị theo header */
+  position: relative; 
 }
 
 .menu-container {
-  margin-left: auto; /* Đẩy nút sang tận cùng bên phải */
+  margin-left: auto; 
   position: relative;
 }
 
@@ -109,4 +118,28 @@ textarea { width: 100%; height: 80px; padding: 10px; border: 1px solid #e4e6eb; 
 .text-danger {
   color: #dc3545;
   font-weight: 500;
+}
+
+.comment-avatar-img {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 8px;
+    border: 1px solid #ddd; 
+}
+
+.comment-avatar-placeholder {
+    width: 32px;
+    height: 32px;
+    background: #e4e6eb;
+    border-radius: 50%;
+    margin-right: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: #555;
+    font-size: 0.8rem;
+    flex-shrink: 0;
 }

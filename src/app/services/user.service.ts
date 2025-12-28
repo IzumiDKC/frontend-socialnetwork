@@ -40,4 +40,7 @@ export class UserService {
   getUserByUsername(username: string): Observable<any> {
   return this.http.get<any>(`${this.baseUrl}/${username}`);
   }
+  getUserInfo(username: string): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/${username}`);
+  }
 }
