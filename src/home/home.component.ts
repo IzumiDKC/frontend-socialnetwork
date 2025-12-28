@@ -19,7 +19,8 @@ export class HomeComponent implements OnInit {
   myUsername = '';
   myId: number | null = null;
   followingIds: number[] = [];
-  
+  myAvatarUrl: string | null = null; // Biến lưu avatar của mình
+
   searchTerm = '';
   searchResults: any[] = [];
   private searchSubject = new Subject<string>();
@@ -38,10 +39,16 @@ export class HomeComponent implements OnInit {
     this.myUsername = profile.username || '';
 
     if (this.myUsername) {
-      this.userService.getMyUserId(this.myUsername).subscribe((id: number) => {
-        this.myId = id;
-        this.refreshFollowing();
+
+      this.userService.getUserInfo(this.myUsername).subscribe({
+        next: (user: any) => {
+          this.myId = user.id;
+          this.myAvatarUrl = user.avatarUrl;
+          this.refreshFollowing();
+        },
+        error: (err) => console.error('Lỗi lấy info user:', err)
       });
+      // ---------------------------------------------------------
     }
 
     this.loadFeed();
@@ -81,13 +88,12 @@ export class HomeComponent implements OnInit {
     });
   }
 
-  // --- CẬP NHẬT: Thêm thuộc tính showMenu vào post ---
   loadFeed() {
     this.postService.getFeed().subscribe((data: any[]) => {
       this.posts = data.map(post => ({
         ...post,
         showComments: false,
-        showMenu: false, // <--- QUAN TRỌNG: Mặc định ẩn menu
+        showMenu: false,
         comments: [],            
         newCommentInput: '' 
       }));
@@ -115,14 +121,10 @@ export class HomeComponent implements OnInit {
     });
   }
 
-  // --- CÁC HÀM XỬ LÝ MENU VÀ XÓA POST MỚI ---
-
   togglePostMenu(post: any) {
-    // Đóng tất cả menu của các bài khác để tránh rối mắt
     this.posts.forEach(p => {
       if (p !== post) p.showMenu = false;
     });
-    // Bật/tắt menu của bài hiện tại
     post.showMenu = !post.showMenu;
   }
 
@@ -134,7 +136,6 @@ export class HomeComponent implements OnInit {
     this.postService.deletePost(post.id).subscribe({
       next: () => {
         alert('Đã xóa bài viết.');
-        // Xóa bài viết khỏi danh sách hiển thị trên giao diện ngay lập tức
         this.posts = this.posts.filter(p => p.id !== post.id);
       },
       error: (err) => {
@@ -143,8 +144,6 @@ export class HomeComponent implements OnInit {
       }
     });
   }
-
-  // ---------------------------------------------
 
   toggleComments(post: any) {
     post.showComments = !post.showComments;
@@ -168,8 +167,14 @@ export class HomeComponent implements OnInit {
 
     this.postService.createComment(post.id, content).subscribe({
       next: (savedComment) => {
+        const commentToDisplay = {
+          ...savedComment,
+          username: this.myUsername,   
+          avatarUrl: this.myAvatarUrl 
+        };
+
         if (!post.comments) post.comments = [];
-        post.comments.unshift(savedComment);
+        post.comments.unshift(commentToDisplay);
         
         post.commentCount++;
         post.newCommentInput = '';
