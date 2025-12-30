@@ -25,8 +25,8 @@ export class PostService {
     return this.http.get<any[]>(`${this.baseUrl}/${postId}/comments`);
   }
 
-  createComment(postId: number, content: string): Observable<any> {
-    return this.http.post<any>(`${this.baseUrl}/${postId}/comments`, { content });
+  createComment(postId: number, content: string, parentId: number | null = null): Observable<any> {
+    return this.http.post(`${this.baseUrl}/${postId}/comments`, { content, parentId });
   }
 
   deleteComment(commentId: number): Observable<any> {

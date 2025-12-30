@@ -16,17 +16,24 @@ import { PostService } from '../app/services/post.service';
   styleUrls: ['./home.component.css'] 
 })
 export class HomeComponent implements OnInit {
+  // --- Biến User ---
   myUsername = '';
   myId: number | null = null;
   followingIds: number[] = [];
-  myAvatarUrl: string | null = null; // Biến lưu avatar của mình
+  myAvatarUrl: string | null = null;
 
+  // --- Biến Search ---
   searchTerm = '';
   searchResults: any[] = [];
   private searchSubject = new Subject<string>();
 
+  // --- Biến Post ---
   posts: any[] = [];
   newPostContent = '';
+
+  // --- Biến Reply (MỚI) ---
+  activeReplyCommentId: number | null = null; // ID comment đang được trả lời
+  replyContent: string = ''; // Nội dung trả lời
 
   constructor(
     private keycloak: KeycloakService,
@@ -39,22 +46,24 @@ export class HomeComponent implements OnInit {
     this.myUsername = profile.username || '';
 
     if (this.myUsername) {
-
+      // Lấy thông tin User đầy đủ (ID + Avatar)
       this.userService.getUserInfo(this.myUsername).subscribe({
         next: (user: any) => {
           this.myId = user.id;
           this.myAvatarUrl = user.avatarUrl;
           this.refreshFollowing();
         },
-        error: (err) => console.error('Lỗi lấy info user:', err)
+        error: (err: any) => console.error('Lỗi lấy info user:', err)
       });
-      // ---------------------------------------------------------
     }
 
     this.loadFeed();
     this.setupSearch();
   }
 
+  // ==========================================
+  // 1. TÌM KIẾM & FOLLOW
+  // ==========================================
   setupSearch() {
     this.searchSubject.pipe(
       debounceTime(300),
@@ -88,13 +97,16 @@ export class HomeComponent implements OnInit {
     });
   }
 
+  // ==========================================
+  // 2. QUẢN LÝ POST (FEED, LIKE, DELETE)
+  // ==========================================
   loadFeed() {
     this.postService.getFeed().subscribe((data: any[]) => {
       this.posts = data.map(post => ({
         ...post,
         showComments: false,
         showMenu: false,
-        comments: [],            
+        comments: [], // Sẽ chứa cây comment
         newCommentInput: '' 
       }));
     });
@@ -129,22 +141,24 @@ export class HomeComponent implements OnInit {
   }
 
   deletePost(post: any) {
-    if (!confirm('Bạn có chắc chắn muốn xóa bài viết này không? Hành động này không thể hoàn tác.')) {
-      return;
-    }
+    if (!confirm('Bạn có chắc chắn muốn xóa bài viết này không?')) return;
 
     this.postService.deletePost(post.id).subscribe({
       next: () => {
         alert('Đã xóa bài viết.');
         this.posts = this.posts.filter(p => p.id !== post.id);
       },
-      error: (err) => {
+      error: (err: any) => {
         console.error(err);
         alert('Lỗi khi xóa bài viết: ' + (err.message || err));
       }
     });
   }
 
+  // ==========================================
+  // 3. QUẢN LÝ COMMENTS (TREE STRUCTURE)
+  // ==========================================
+  
   toggleComments(post: any) {
     post.showComments = !post.showComments;
     if (post.showComments) {
@@ -154,23 +168,108 @@ export class HomeComponent implements OnInit {
 
   loadComments(post: any) {
     this.postService.getComments(post.id).subscribe({
-      next: (comments) => {
-        post.comments = comments;
+      next: (flatComments: any[]) => {
+        // Chuyển đổi danh sách phẳng từ API thành Cây (Tree)
+        post.comments = this.buildCommentTree(flatComments);
       },
-      error: (err) => console.error('Lỗi tải comment:', err)
+      error: (err: any) => console.error('Lỗi tải comment:', err)
     });
+  }
+
+  // Hàm helper: Flat List -> Tree
+  buildCommentTree(flatComments: any[]): any[] {
+    const map = new Map();
+    const roots: any[] = [];
+
+    // Khởi tạo map
+    flatComments.forEach(c => {
+      c.children = [];
+      map.set(c.id, c);
+    });
+
+    // Xếp con vào cha
+    flatComments.forEach(c => {
+      if (c.parentId) {
+        const parent = map.get(c.parentId);
+        if (parent) {
+          parent.children.push(c);
+        } else {
+          // Nếu có parentId nhưng không tìm thấy cha (lỗi data), cho làm root
+          roots.push(c); 
+        }
+      } else {
+        roots.push(c); // Không có parentId -> Là root
+      }
+    });
+
+    return roots;
+  }
+
+  // XỬ LÝ REPLY & @USERNAME
+
+  initReply(comment: any) {
+    this.activeReplyCommentId = comment.id;
+    this.replyContent = '';
+
+    // Logic @Username: Nếu comment không phải của mình thì tự điền @Ten
+    if (comment.username !== this.myUsername) {
+      this.replyContent = `@${comment.username} `;
+    }
+  }
+
+  // Hủy trả lời
+  cancelReply() {
+    this.activeReplyCommentId = null;
+    this.replyContent = '';
+  }
+
+  submitReply(post: any, parentId: number) {
+    if (!this.replyContent.trim()) return;
+
+    this.postService.createComment(post.id, this.replyContent, parentId).subscribe({
+      next: (savedReply: any) => {
+        const replyToDisplay = {
+          ...savedReply,
+          username: this.myUsername,
+          avatarUrl: this.myAvatarUrl,
+          children: []
+        };
+
+        this.addReplyToTree(post.comments, parentId, replyToDisplay);
+
+        post.commentCount++;
+        this.cancelReply();
+      },
+      error: (err: any) => alert('Lỗi gửi trả lời: ' + (err.message || err))
+    });
+  }
+
+  // Helper: Tìm node cha và push con vào (Đệ quy)
+  addReplyToTree(nodes: any[], parentId: number, newChild: any) {
+    for (const node of nodes) {
+      if (node.id === parentId) {
+        if (!node.children) node.children = [];
+        node.children.push(newChild);
+        return;
+      }
+      if (node.children && node.children.length > 0) {
+        this.addReplyToTree(node.children, parentId, newChild);
+      }
+    }
   }
 
   submitComment(post: any) {
     const content = post.newCommentInput?.trim();
     if (!content) return;
 
-    this.postService.createComment(post.id, content).subscribe({
-      next: (savedComment) => {
+    // ParentId là null
+    this.postService.createComment(post.id, content, null).subscribe({
+      next: (savedComment: any) => {
         const commentToDisplay = {
           ...savedComment,
           username: this.myUsername,   
-          avatarUrl: this.myAvatarUrl 
+          avatarUrl: this.myAvatarUrl,
+          children: []
         };
 
         if (!post.comments) post.comments = [];
@@ -179,19 +278,41 @@ export class HomeComponent implements OnInit {
         post.commentCount++;
         post.newCommentInput = '';
       },
-      error: (err) => alert('Không thể gửi bình luận: ' + err.message)
+      error: (err: any) => alert('Không thể gửi bình luận: ' + (err.message || err))
     });
   }
 
+  // XÓA COMMENT
+  
   deleteComment(post: any, commentId: number) {
     if (!confirm('Bạn có chắc muốn xóa bình luận này?')) return;
 
     this.postService.deleteComment(commentId).subscribe({
       next: () => {
-        post.comments = post.comments.filter((c: any) => c.id !== commentId);
-        post.commentCount--;
+        // Xóa node khỏi cây (cần hàm đệ quy vì không biết nó nằm sâu bao nhiêu)
+        this.removeNodeFromTree(post.comments, commentId);
+        
+        // Giảm số lượng (Lưu ý: Nếu xóa cha thì con cũng mất, count nên load lại từ server để chính xác nhất)
+        // Ở đây ta giảm tạm 1 để update UI
+        post.commentCount--; 
       },
-      error: (err) => alert('Lỗi xóa comment: ' + err.message)
+      error: (err: any) => alert('Lỗi xóa comment: ' + (err.message || err))
     });
+  }
+
+  // Helper: Xóa node khỏi cây
+  removeNodeFromTree(nodes: any[], idToRemove: number): boolean {
+    const index = nodes.findIndex(n => n.id === idToRemove);
+    if (index !== -1) {
+      nodes.splice(index, 1);
+      return true;
+    }
+    for (const node of nodes) {
+      if (node.children && node.children.length > 0) {
+        const deleted = this.removeNodeFromTree(node.children, idToRemove);
+        if (deleted) return true;
+      }
+    }
+    return false;
   }
 }
