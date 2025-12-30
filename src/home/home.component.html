@@ -27,15 +27,14 @@
     </div>
 
     <button (click)="loadFeed()"
-      style="margin-bottom: 10px; cursor: pointer; border: none; background: none; color: #1877f2;">🔄 Làm mới bảng
-      tin</button>
+      style="margin-bottom: 10px; cursor: pointer; border: none; background: none; color: #1877f2;">
+      🔄 Làm mới bảng tin
+    </button>
 
     <div *ngFor="let post of posts" class="post-card">
 
       <div class="post-header">
-
         <img *ngIf="post.avatarUrl" [src]="post.avatarUrl" class="avatar-img" alt="Avatar">
-
         <div *ngIf="!post.avatarUrl" class="avatar-placeholder">
           {{ post.username?.charAt(0)?.toUpperCase() || 'U' }}
         </div>
@@ -46,10 +45,9 @@
 
         <div class="menu-container" *ngIf="post.userId === myId">
           <button class="btn-menu" (click)="togglePostMenu(post)">•••</button>
-
           <div class="dropdown-menu" *ngIf="post.showMenu">
             <button class="dropdown-item text-danger" (click)="deletePost(post)">
-              Xóa bài viết
+              🗑️ Xóa bài viết
             </button>
           </div>
         </div>
@@ -68,52 +66,103 @@
       </div>
 
       <div class="comment-section" *ngIf="post.showComments">
+        
         <div class="comment-input-area">
-
           <img *ngIf="myAvatarUrl" [src]="myAvatarUrl" class="comment-avatar-img" alt="My Avatar">
-
           <div *ngIf="!myAvatarUrl" class="avatar-placeholder avatar-small">
             {{ myUsername.charAt(0).toUpperCase() }}
           </div>
-
           <input class="comment-input" placeholder="Viết bình luận..." [(ngModel)]="post.newCommentInput"
             (keyup.enter)="submitComment(post)">
-
           <button class="btn-send-comment" (click)="submitComment(post)" [disabled]="!post.newCommentInput?.trim()">
             Gửi
           </button>
         </div>
 
         <div class="comment-list">
-          <div *ngFor="let c of post.comments" class="comment-item">
 
-            <img *ngIf="c.avatarUrl" [src]="c.avatarUrl" class="comment-avatar-img" alt="Avatar">
+  <div *ngFor="let c1 of post.comments" class="comment-tree-node">
+    <ng-container *ngTemplateOutlet="commentTemplate; context: { $implicit: c1, post: post, level: 1 }">
+    </ng-container>
 
-            <div *ngIf="!c.avatarUrl" class="comment-avatar-placeholder">
-              {{ (c.username?.charAt(0)?.toUpperCase()) || 'U' }}
-            </div>
+    <div class="replies-container level-2" *ngIf="c1.children?.length > 0">
+      <div *ngFor="let c2 of c1.children">
+        <ng-container *ngTemplateOutlet="commentTemplate; context: { $implicit: c2, post: post, level: 2 }">
+        </ng-container>
 
-            <div style="flex: 1;">
-              <div class="comment-bubble">
-                <span class="comment-author">{{ c.username || ('User ' + c.userId) }}</span>
-                <span class="comment-text">{{ c.content }}</span>
-              </div>
-              <div class="comment-meta">
-                <span>{{ c.createdAt | date:'short' }}</span>
-                <button *ngIf="c.userId === myId" class="comment-delete"
-                  (click)="deleteComment(post, c.id)">Xóa</button>
-              </div>
-            </div>
-          </div>
-          <div *ngIf="post.comments && post.comments.length === 0"
-            style="text-align: center; font-size: 0.85rem; color: #888;">
-            Chưa có bình luận nào. Hãy là người đầu tiên!
-          </div>
+        <div class="replies-container level-3" *ngIf="c2.children?.length > 0">
+           <ng-container *ngTemplateOutlet="recursiveReplies; context: { list: c2.children, post: post }">
+           </ng-container>
         </div>
+
       </div>
     </div>
+  </div>
 
-    <div *ngIf="posts.length === 0" style="text-align: center; color: gray; margin-top: 20px;">Chưa có bài viết nào.
-    </div>
+  <div *ngIf="post.comments && post.comments.length === 0"
+    style="text-align: center; font-size: 0.85rem; color: #888; margin-top: 10px;">
+    Chưa có bình luận nào.
   </div>
 </div>
+
+<ng-template #recursiveReplies let-list="list" let-post="post">
+  <div *ngFor="let item of list">
+    
+    <ng-container *ngTemplateOutlet="commentTemplate; context: { $implicit: item, post: post, level: 3 }">
+    </ng-container>
+
+    <div *ngIf="item.children?.length > 0">
+       <ng-container *ngTemplateOutlet="recursiveReplies; context: { list: item.children, post: post }">
+       </ng-container>
+    </div>
+
+  </div>
+</ng-template>
+
+<ng-template #commentTemplate let-comment let-post="post" let-level="level">
+  <div class="comment-item">
+    <img *ngIf="comment.avatarUrl" [src]="comment.avatarUrl" class="comment-avatar-img" alt="Avatar">
+    <div *ngIf="!comment.avatarUrl" class="comment-avatar-placeholder">
+      {{ (comment.username?.charAt(0)?.toUpperCase()) || 'U' }}
+    </div>
+
+    <div style="flex: 1;">
+      <div class="comment-bubble">
+        <span class="comment-author">{{ comment.username || ('User ' + comment.userId) }}</span>
+        <span class="comment-text">{{ comment.content }}</span>
+      </div>
+
+      <div class="comment-meta">
+        <span>{{ comment.createdAt | date:'short' }}</span>
+        
+        <button class="action-link" (click)="initReply(comment)">Trả lời</button>
+
+        <button *ngIf="comment.userId === myId" class="comment-delete"
+          (click)="deleteComment(post, comment.id)">Xóa</button>
+      </div>
+
+      <div *ngIf="activeReplyCommentId === comment.id" 
+           class="reply-input-box"
+           [class.reply-level-3]="level >= 3">
+           
+         <img *ngIf="myAvatarUrl" [src]="myAvatarUrl" class="reply-avatar-img" alt="Me">
+         <div *ngIf="!myAvatarUrl" class="reply-avatar-placeholder">
+            {{ myUsername.charAt(0).toUpperCase() }}
+         </div>
+
+         <div class="reply-input-wrapper">
+            <input [(ngModel)]="replyContent" 
+                   class="reply-input" 
+                   placeholder="Viết phản hồi..." 
+                   (keyup.enter)="submitReply(post, comment.id)"
+                   autofocus>
+            <div class="reply-actions">
+               <button class="btn-cancel-reply" (click)="cancelReply()">Hủy</button>
+               <button class="btn-submit-reply" (click)="submitReply(post, comment.id)">Gửi</button>
+            </div>
+         </div>
+      </div>
+
+    </div>
+  </div>
+</ng-template>
