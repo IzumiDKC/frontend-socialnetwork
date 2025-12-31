@@ -7,7 +7,6 @@ import { CommonModule } from '@angular/common';
   standalone: true,
   imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive], // Import RouterLink
   styles: [`
-    /* Header Style */
     .navbar {
       background-color: #ffffff;
       border-bottom: 1px solid #ddd;
@@ -27,7 +26,6 @@ import { CommonModule } from '@angular/common';
     }
     .nav-item:hover { background-color: #f0f2f5; }
     
-    /* Active Link Style (Khi đang ở trang đó) */
     .active-link { color: #1877f2; background-color: #e7f3ff; }
   `],
   template: `
