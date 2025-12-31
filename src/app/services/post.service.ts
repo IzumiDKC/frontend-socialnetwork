@@ -35,4 +35,7 @@ export class PostService {
   deletePost(postId: number): Observable<any> {
     return this.http.delete(`${this.baseUrl}/${postId}`, { responseType: 'text' });
   }
+  getPostsByUserId(userId: number): Observable<any[]> {
+    return this.http.get<any[]>(`${this.baseUrl}/user/${userId}`);
+  }
 }
