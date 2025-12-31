@@ -1,21 +1,22 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { KeycloakService } from 'keycloak-angular';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 
-import { UserService } from '../app/services/user.service';
-import { PostService } from '../app/services/post.service';
+import { UserService } from '../app/./services/user.service';
+import { PostService } from '../app/./services/post.service';
+import { WebSocketService } from '../app/./services/websocket.service';
 
 @Component({
   selector: 'app-home',
   standalone: true,
   imports: [CommonModule, FormsModule, DatePipe],
   templateUrl: './home.component.html',
-  styleUrls: ['./home.component.css'] 
+  styleUrls: ['./home.component.css']
 })
-export class HomeComponent implements OnInit {
+export class HomeComponent implements OnInit, OnDestroy {
   // --- Biến User ---
   myUsername = '';
   myId: number | null = null;
@@ -31,14 +32,21 @@ export class HomeComponent implements OnInit {
   posts: any[] = [];
   newPostContent = '';
 
-  // --- Biến Reply (MỚI) ---
-  activeReplyCommentId: number | null = null; // ID comment đang được trả lời
-  replyContent: string = ''; // Nội dung trả lời
+  // --- Biến Reply ---
+  activeReplyCommentId: number | null = null;
+  replyContent: string = '';
+
+  // --- Biến Notification ---
+  notifications: any[] = [];
+  unreadCount: number = 0;
+  showNotifications: boolean = false;
+  showToastData: any = null; // Dùng để hiện thông báo nổi (Toast)
 
   constructor(
     private keycloak: KeycloakService,
     private userService: UserService,
-    private postService: PostService
+    private postService: PostService,
+    private webSocketService: WebSocketService
   ) {}
 
   async ngOnInit() {
@@ -46,12 +54,19 @@ export class HomeComponent implements OnInit {
     this.myUsername = profile.username || '';
 
     if (this.myUsername) {
-      // Lấy thông tin User đầy đủ (ID + Avatar)
       this.userService.getUserInfo(this.myUsername).subscribe({
         next: (user: any) => {
           this.myId = user.id;
           this.myAvatarUrl = user.avatarUrl;
           this.refreshFollowing();
+
+          if (this.myId) {
+            this.webSocketService.connect(this.myId);
+
+            this.webSocketService.notificationSubject.subscribe((noti: any) => {
+              this.handleNewNotification(noti);
+            });
+          }
         },
         error: (err: any) => console.error('Lỗi lấy info user:', err)
       });
@@ -61,9 +76,35 @@ export class HomeComponent implements OnInit {
     this.setupSearch();
   }
 
-  // ==========================================
-  // 1. TÌM KIẾM & FOLLOW
-  // ==========================================
+  ngOnDestroy() {
+    // Ngắt kết nối khi rời trang (tùy chọn, thường thì để App Component quản lý tốt hơn)
+    this.webSocketService.disconnect();
+  }
+
+  // XỬ LÝ THÔNG BÁO
+
+  handleNewNotification(noti: any) {
+    this.notifications.unshift(noti);
+    this.unreadCount++;
+    this.showToast(noti);
+  }
+
+  toggleNotificationPanel() {
+    this.showNotifications = !this.showNotifications;
+    if (this.showNotifications) {
+      this.unreadCount = 0;
+    }
+  }
+
+  showToast(noti: any) {
+    this.showToastData = noti;
+    // Tự động ẩn Toast sau 3 giây
+    setTimeout(() => {
+      this.showToastData = null;
+    }, 3000);
+  }
+
+  //TÌM KIẾM & FOLLOW
   setupSearch() {
     this.searchSubject.pipe(
       debounceTime(300),
@@ -97,17 +138,16 @@ export class HomeComponent implements OnInit {
     });
   }
 
-  // ==========================================
-  // 2. QUẢN LÝ POST (FEED, LIKE, DELETE)
-  // ==========================================
+  // QUẢN LÝ POST
+
   loadFeed() {
     this.postService.getFeed().subscribe((data: any[]) => {
       this.posts = data.map(post => ({
         ...post,
         showComments: false,
         showMenu: false,
-        comments: [], // Sẽ chứa cây comment
-        newCommentInput: '' 
+        comments: [],
+        newCommentInput: ''
       }));
     });
   }
@@ -155,10 +195,8 @@ export class HomeComponent implements OnInit {
     });
   }
 
-  // ==========================================
-  // 3. QUẢN LÝ COMMENTS (TREE STRUCTURE)
-  // ==========================================
-  
+  // QUẢN LÝ COMMENTS (TREE STRUCTURE)
+
   toggleComments(post: any) {
     post.showComments = !post.showComments;
     if (post.showComments) {
@@ -195,7 +233,7 @@ export class HomeComponent implements OnInit {
           parent.children.push(c);
         } else {
           // Nếu có parentId nhưng không tìm thấy cha (lỗi data), cho làm root
-          roots.push(c); 
+          roots.push(c);
         }
       } else {
         roots.push(c); // Không có parentId -> Là root
@@ -205,7 +243,7 @@ export class HomeComponent implements OnInit {
     return roots;
   }
 
-  // XỬ LÝ REPLY & @USERNAME
+  //  XỬ LÝ REPLY & COMMENTS
 
   initReply(comment: any) {
     this.activeReplyCommentId = comment.id;
@@ -226,8 +264,10 @@ export class HomeComponent implements OnInit {
   submitReply(post: any, parentId: number) {
     if (!this.replyContent.trim()) return;
 
+    // Gọi API tạo comment với parentId
     this.postService.createComment(post.id, this.replyContent, parentId).subscribe({
       next: (savedReply: any) => {
+        // Tạo object hiển thị ngay lập tức (Fake UI update)
         const replyToDisplay = {
           ...savedReply,
           username: this.myUsername,
@@ -235,6 +275,7 @@ export class HomeComponent implements OnInit {
           children: []
         };
 
+        // Thêm vào cây comment
         this.addReplyToTree(post.comments, parentId, replyToDisplay);
 
         post.commentCount++;
@@ -262,19 +303,19 @@ export class HomeComponent implements OnInit {
     const content = post.newCommentInput?.trim();
     if (!content) return;
 
-    // ParentId là null
+    // ParentId là null cho comment gốc
     this.postService.createComment(post.id, content, null).subscribe({
       next: (savedComment: any) => {
         const commentToDisplay = {
           ...savedComment,
-          username: this.myUsername,   
+          username: this.myUsername,
           avatarUrl: this.myAvatarUrl,
           children: []
         };
 
         if (!post.comments) post.comments = [];
         post.comments.unshift(commentToDisplay);
-        
+
         post.commentCount++;
         post.newCommentInput = '';
       },
@@ -283,18 +324,17 @@ export class HomeComponent implements OnInit {
   }
 
   // XÓA COMMENT
-  
+
   deleteComment(post: any, commentId: number) {
     if (!confirm('Bạn có chắc muốn xóa bình luận này?')) return;
 
     this.postService.deleteComment(commentId).subscribe({
       next: () => {
-        // Xóa node khỏi cây (cần hàm đệ quy vì không biết nó nằm sâu bao nhiêu)
+        // Xóa node khỏi cây
         this.removeNodeFromTree(post.comments, commentId);
-        
-        // Giảm số lượng (Lưu ý: Nếu xóa cha thì con cũng mất, count nên load lại từ server để chính xác nhất)
-        // Ở đây ta giảm tạm 1 để update UI
-        post.commentCount--; 
+
+        // Giảm số lượng
+        post.commentCount--;
       },
       error: (err: any) => alert('Lỗi xóa comment: ' + (err.message || err))
     });

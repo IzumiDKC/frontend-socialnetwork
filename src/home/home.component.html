@@ -80,42 +80,39 @@
         </div>
 
         <div class="comment-list">
+          <div *ngFor="let c1 of post.comments" class="comment-tree-node">
+            <ng-container *ngTemplateOutlet="commentTemplate; context: { $implicit: c1, post: post, level: 1 }">
+            </ng-container>
+            <div class="replies-container level-2" *ngIf="c1.children?.length > 0">
+              <div *ngFor="let c2 of c1.children">
+                <ng-container *ngTemplateOutlet="commentTemplate; context: { $implicit: c2, post: post, level: 2 }">
+                </ng-container>
+                <div class="replies-container level-3" *ngIf="c2.children?.length > 0">
+                   <ng-container *ngTemplateOutlet="recursiveReplies; context: { list: c2.children, post: post }">
+                   </ng-container>
+                </div>
+              </div>
+            </div>
+          </div>
 
-  <div *ngFor="let c1 of post.comments" class="comment-tree-node">
-    <ng-container *ngTemplateOutlet="commentTemplate; context: { $implicit: c1, post: post, level: 1 }">
-    </ng-container>
-
-    <div class="replies-container level-2" *ngIf="c1.children?.length > 0">
-      <div *ngFor="let c2 of c1.children">
-        <ng-container *ngTemplateOutlet="commentTemplate; context: { $implicit: c2, post: post, level: 2 }">
-        </ng-container>
-
-        <div class="replies-container level-3" *ngIf="c2.children?.length > 0">
-           <ng-container *ngTemplateOutlet="recursiveReplies; context: { list: c2.children, post: post }">
-           </ng-container>
+          <div *ngIf="post.comments && post.comments.length === 0"
+            style="text-align: center; font-size: 0.85rem; color: #888; margin-top: 10px;">
+            Chưa có bình luận nào.
+          </div>
         </div>
-
       </div>
     </div>
-  </div>
-
-  <div *ngIf="post.comments && post.comments.length === 0"
-    style="text-align: center; font-size: 0.85rem; color: #888; margin-top: 10px;">
-    Chưa có bình luận nào.
   </div>
 </div>
 
 <ng-template #recursiveReplies let-list="list" let-post="post">
   <div *ngFor="let item of list">
-    
     <ng-container *ngTemplateOutlet="commentTemplate; context: { $implicit: item, post: post, level: 3 }">
     </ng-container>
-
     <div *ngIf="item.children?.length > 0">
        <ng-container *ngTemplateOutlet="recursiveReplies; context: { list: item.children, post: post }">
        </ng-container>
     </div>
-
   </div>
 </ng-template>
 
@@ -134,9 +131,7 @@
 
       <div class="comment-meta">
         <span>{{ comment.createdAt | date:'short' }}</span>
-        
         <button class="action-link" (click)="initReply(comment)">Trả lời</button>
-
         <button *ngIf="comment.userId === myId" class="comment-delete"
           (click)="deleteComment(post, comment.id)">Xóa</button>
       </div>
@@ -162,7 +157,35 @@
             </div>
          </div>
       </div>
-
     </div>
   </div>
 </ng-template>
+
+<div class="notification-wrapper">
+  <button class="btn-bell" (click)="toggleNotificationPanel()">
+    🔔
+    <span *ngIf="unreadCount > 0" class="badge">{{ unreadCount }}</span>
+  </button>
+
+  <div class="notification-panel" *ngIf="showNotifications">
+    <h3>Thông báo</h3>
+    <div class="noti-list">
+      <div *ngFor="let noti of notifications" class="noti-item">
+         <div class="noti-content">
+            <strong>{{ noti.senderName }}</strong> {{ noti.content }}
+            <br>
+            <small style="color: gray; font-size: 0.8rem;">{{ noti.createdAt | date:'short' }}</small>
+         </div>
+      </div>
+      <div *ngIf="notifications.length === 0" style="padding: 15px; text-align: center; color: #777;">
+         Chưa có thông báo nào.
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast-notification" *ngIf="showToastData">
+   <div class="toast-body">
+      <strong>{{ showToastData.senderName }}</strong> {{ showToastData.content }}
+   </div>
+</div>
