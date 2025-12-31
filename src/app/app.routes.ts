@@ -11,11 +11,19 @@ export const routes: Routes = [
     component: HomeComponent, 
     canActivate: [authGuard] 
   },
-  { 
+  
+  /* { 
     path: 'profile', 
     component: ProfileComponent, 
     canActivate: [authGuard] 
+  }, */
+
+  { 
+    path: ':username', 
+    component: ProfileComponent, 
+    canActivate: [authGuard] 
   },
+
 
   { path: '**', redirectTo: 'home' }
 ];

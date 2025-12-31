@@ -1,11 +1,12 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { KeycloakService } from 'keycloak-angular'; 
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive], // Import RouterLink
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive], 
   styles: [`
     .navbar {
       background-color: #ffffff;
@@ -23,6 +24,7 @@ import { CommonModule } from '@angular/common';
     .nav-links { display: flex; gap: 20px; }
     .nav-item {
       text-decoration: none; color: #65676b; font-weight: 600; padding: 8px 15px; border-radius: 5px; transition: 0.2s;
+      cursor: pointer;
     }
     .nav-item:hover { background-color: #f0f2f5; }
     
@@ -34,13 +36,33 @@ import { CommonModule } from '@angular/common';
       
       <div class="nav-links">
         <a routerLink="/home" routerLinkActive="active-link" class="nav-item">Trang chủ</a>
-        <a routerLink="/profile" routerLinkActive="active-link" class="nav-item">Tài khoản</a>
+        
+        <a *ngIf="myUsername" 
+           [routerLink]="['/', myUsername]" 
+           routerLinkActive="active-link" 
+           class="nav-item">
+           Tài khoản
+        </a>
       </div>
     </nav>
 
     <router-outlet></router-outlet>
   `
 })
-export class AppComponent {
+export class AppComponent implements OnInit {
   title = 'frontend-socialnetwork';
+  myUsername = '';
+
+  constructor(private keycloak: KeycloakService) {}
+
+  async ngOnInit() {
+    try {
+      if (await this.keycloak.isLoggedIn()) {
+        const profile = await this.keycloak.loadUserProfile();
+        this.myUsername = profile.username || '';
+      }
+    } catch (error) {
+      console.error('Lỗi lấy thông tin user:', error);
+    }
+  }
 }
