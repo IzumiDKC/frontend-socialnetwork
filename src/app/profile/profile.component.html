@@ -1,0 +1,66 @@
+<div class="profile-container">
+  
+  <div *ngIf="isLoading" class="loading-box">
+    Đang tải thông tin...
+  </div>
+
+  <div *ngIf="!isLoading && !profileData" class="error-box">
+    <h3>Không tìm thấy người dùng "{{ targetUsername }}"</h3>
+    <button routerLink="/home" class="btn-back">Quay về trang chủ</button>
+  </div>
+
+  <div *ngIf="!isLoading && profileData" class="profile-content">
+    
+    <div class="profile-header">
+      <div class="avatar-section">
+        <img [src]="profileData.avatarUrl || 'assets/default-avatar.png'" alt="Avatar" class="profile-avatar">
+      </div>
+      
+      <div class="info-section">
+        <div class="name-row">
+          <h2 class="username">{{ profileData.username }}</h2>
+          
+          <div class="actions">
+            <ng-container *ngIf="isMyProfile; else otherProfileActions">
+              <button class="btn btn-secondary" (click)="editProfile()">✏️ Chỉnh sửa trang cá nhân</button>
+            </ng-container>
+            
+            <ng-template #otherProfileActions>
+              <button *ngIf="!isFollowing" class="btn btn-primary" (click)="toggleFollow()">Follow</button>
+              <button *ngIf="isFollowing" class="btn btn-outline" (click)="toggleFollow()">Đang Follow</button>
+              <button class="btn btn-secondary">Nhắn tin</button>
+            </ng-template>
+          </div>
+        </div>
+
+        <div class="stats-row">
+            <span><strong>{{ userPosts.length }}</strong> bài viết</span>
+            <span><strong>0</strong> người theo dõi</span>
+            <span><strong>0</strong> đang theo dõi</span>
+        </div>
+
+        <div class="bio-row">
+          <p>{{ profileData.bio || 'Chưa có giới thiệu.' }}</p>
+        </div>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <div class="posts-grid">
+      <div *ngIf="userPosts.length === 0" class="no-posts">
+        <div class="icon">📷</div>
+        <p>Chưa có bài viết nào.</p>
+      </div>
+
+      <div *ngFor="let post of userPosts" class="post-item">
+        <div class="post-card-simple">
+            <div class="post-meta">{{ post.createdAt | date:'shortDate' }}</div>
+            <div class="post-text">{{ post.content }}</div>
+            <div class="post-footer">❤️ {{ post.likeCount }} • 💬 {{ post.commentCount }}</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
