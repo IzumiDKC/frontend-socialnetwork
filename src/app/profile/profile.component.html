@@ -35,12 +35,18 @@
 
         <div class="stats-row">
             <span><strong>{{ userPosts.length }}</strong> bài viết</span>
-            <span><strong>0</strong> người theo dõi</span>
-            <span><strong>0</strong> đang theo dõi</span>
+
+            <span>
+                <strong>{{ profileData.followerCount || 0 }}</strong> người theo dõi
+            </span>
+
+            <span>
+                <strong>{{ profileData.followingCount || 0 }}</strong> đang theo dõi
+            </span>
         </div>
 
         <div class="bio-row">
-          <p>{{ profileData.bio || 'Chưa có giới thiệu.' }}</p>
+          <p>{{ profileData.bio || 'Người dùng này chưa viết giới thiệu.' }}</p>
         </div>
       </div>
     </div>
