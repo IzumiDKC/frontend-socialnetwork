@@ -8,10 +8,12 @@ import { of } from 'rxjs';
 import { UserService } from '../services/user.service';
 import { PostService } from '../services/post.service';
 
+import { FormsModule } from '@angular/forms'
+
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule, RouterModule, DatePipe],
+  imports: [CommonModule, RouterModule, DatePipe, FormsModule],
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.css']
 })
@@ -29,6 +31,13 @@ export class ProfileComponent implements OnInit {
   isMyProfile: boolean = false; 
   isFollowing: boolean = false; 
 
+  // Biến cho Modal Edit
+  showEditModal: boolean = false;
+  editData = {
+    fullName: '',
+    bio: ''
+  };
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -36,7 +45,7 @@ export class ProfileComponent implements OnInit {
     private postService: PostService,
     private keycloak: KeycloakService
   ) {}
-
+  
   async ngOnInit() {
     this.isLoading = true;
 
@@ -86,7 +95,8 @@ export class ProfileComponent implements OnInit {
           this.checkFollowStatus(this.myId, user.id);
         }
 
-        return this.postService.getPostsByUserId ? this.postService.getPostsByUserId(user.id) : of([]); 
+        // Gọi hàm lấy bài viết (đã bỏ dấu ? và : of([]) vì hàm này đã được tạo ở bước trước)
+        return this.postService.getPostsByUserId(user.id);
       })
     ).subscribe({
       next: (posts: any[]) => {
@@ -116,13 +126,44 @@ export class ProfileComponent implements OnInit {
       this.userService.followUser(this.myId, this.profileData.id).subscribe({
         next: () => {
           this.isFollowing = true;
+          // Tăng follower count giả lập để UI phản hồi ngay
+          if (this.profileData.followerCount !== undefined) {
+             this.profileData.followerCount++;
+          }
         },
         error: (err) => alert('Lỗi khi follow: ' + err.message)
       });
     }
   }
 
-  editProfile() {
-    alert('Tính năng chỉnh sửa đang phát triển');
+  // --- CÁC HÀM XỬ LÝ EDIT PROFILE (ĐÃ SỬA) ---
+
+  // 1. Mở Modal và điền dữ liệu hiện tại vào Form
+  openEditModal() {
+    this.editData = {
+      fullName: this.profileData.fullName || '', // Lấy tên hiển thị hiện tại
+      bio: this.profileData.bio || ''            // Lấy bio hiện tại
+    };
+    this.showEditModal = true;
+  }
+
+  // 2. Đóng Modal
+  closeEditModal() {
+    this.showEditModal = false;
+  }
+
+  saveProfile() {
+    this.userService.updateProfile(this.editData).subscribe({
+      next: (updatedUser: any) => { 
+        
+        this.profileData = updatedUser;
+        this.showEditModal = false;
+        alert('Cập nhật thành công!');
+      },
+      error: (err: any) => {
+        console.error(err);
+        alert('Lỗi cập nhật: ' + (err.error?.message || err.message));
+      }
+    });
   }
 }
