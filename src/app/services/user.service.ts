@@ -43,4 +43,7 @@ export class UserService {
   getUserInfo(username: string): Observable<any> {
     return this.http.get<any>(`${this.baseUrl}/${username}`);
   }
+  updateProfile(data: any): Observable<any> {
+    return this.http.put(`${this.baseUrl}/me`, data);
+  }
 }
