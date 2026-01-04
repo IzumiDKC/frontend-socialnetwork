@@ -3,12 +3,12 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router'; 
 import { KeycloakService } from 'keycloak-angular';
 import { switchMap } from 'rxjs/operators';
-import { of } from 'rxjs';
+import { of } from 'rxjs'; // Import 'of' để xử lý luồng RxJS
 
 import { UserService } from '../services/user.service';
 import { PostService } from '../services/post.service';
 
-import { FormsModule } from '@angular/forms'
+import { FormsModule } from '@angular/forms'; // Quan trọng cho ngModel
 
 @Component({
   selector: 'app-profile',
@@ -18,25 +18,30 @@ import { FormsModule } from '@angular/forms'
   styleUrls: ['./profile.component.css']
 })
 export class ProfileComponent implements OnInit {
+  // Biến định danh
   targetUsername: string = '';
   myUsername: string = '';   
   myId: number | null = null; 
 
-  // Data show
+  // Dữ liệu hiển thị
   profileData: any = null;    
   userPosts: any[] = [];      
 
-  // Status UI
+  // Trạng thái UI
   isLoading: boolean = true;
   isMyProfile: boolean = false; 
   isFollowing: boolean = false; 
 
-  // Biến cho Modal Edit
+  // Biến cho Modal Edit (Chỉnh sửa)
   showEditModal: boolean = false;
   editData = {
     fullName: '',
     bio: ''
   };
+
+  // Biến cho Upload Avatar
+  selectedFile: File | null = null;
+  previewAvatar: string | null = null;
 
   constructor(
     private route: ActivatedRoute,
@@ -75,10 +80,12 @@ export class ProfileComponent implements OnInit {
     });
   }
 
+  // Kiểm tra xem trang này có phải của mình không
   checkIfMyProfile() {
     this.isMyProfile = (this.targetUsername === this.myUsername);
   }
 
+  // Tải dữ liệu Profile + Bài viết
   loadProfileData(username: string) {
     this.isLoading = true;
     this.profileData = null;
@@ -91,11 +98,12 @@ export class ProfileComponent implements OnInit {
         }
         this.profileData = user;
 
+        // Nếu xem người khác -> Kiểm tra xem đã follow chưa
         if (!this.isMyProfile && this.myId) {
           this.checkFollowStatus(this.myId, user.id);
         }
 
-        // Gọi hàm lấy bài viết (đã bỏ dấu ? và : of([]) vì hàm này đã được tạo ở bước trước)
+        // Lấy danh sách bài viết
         return this.postService.getPostsByUserId(user.id);
       })
     ).subscribe({
@@ -103,20 +111,21 @@ export class ProfileComponent implements OnInit {
         this.userPosts = posts;
         this.isLoading = false;
       },
-      error: (err) => {
+      error: (err: any) => {
         console.error('Lỗi tải profile:', err);
         this.isLoading = false;
       }
     });
   }
 
+  // Kiểm tra trạng thái Follow
   checkFollowStatus(sourceId: number, targetId: number) {
     this.userService.getFollowingIds(sourceId).subscribe((ids: number[]) => {
       this.isFollowing = ids.includes(targetId);
     });
   }
 
-  // Follow / Unfollow
+  // Hành động Follow / Unfollow
   toggleFollow() {
     if (!this.myId || !this.profileData) return;
 
@@ -126,38 +135,58 @@ export class ProfileComponent implements OnInit {
       this.userService.followUser(this.myId, this.profileData.id).subscribe({
         next: () => {
           this.isFollowing = true;
-          // Tăng follower count giả lập để UI phản hồi ngay
           if (this.profileData.followerCount !== undefined) {
              this.profileData.followerCount++;
           }
         },
-        error: (err) => alert('Lỗi khi follow: ' + err.message)
+        error: (err: any) => alert('Lỗi khi follow: ' + err.message)
       });
     }
   }
 
-  // --- CÁC HÀM XỬ LÝ EDIT PROFILE (ĐÃ SỬA) ---
+  onFileSelected(event: any) {
+    const file = event.target.files[0];
+    if (file) {
+      this.selectedFile = file;
+      const reader = new FileReader();
+      reader.onload = (e: any) => this.previewAvatar = e.target.result;
+      reader.readAsDataURL(file);
+    }
+  }
 
-  // 1. Mở Modal và điền dữ liệu hiện tại vào Form
   openEditModal() {
     this.editData = {
-      fullName: this.profileData.fullName || '', // Lấy tên hiển thị hiện tại
-      bio: this.profileData.bio || ''            // Lấy bio hiện tại
+      fullName: this.profileData.fullName || '',
+      bio: this.profileData.bio || ''
     };
+    this.selectedFile = null;
+    this.previewAvatar = this.profileData.avatarUrl; 
     this.showEditModal = true;
   }
 
-  // 2. Đóng Modal
   closeEditModal() {
     this.showEditModal = false;
   }
 
   saveProfile() {
-    this.userService.updateProfile(this.editData).subscribe({
+
+    const updateText$ = this.userService.updateProfile(this.editData);
+    
+    let requestStream;
+
+    if (this.selectedFile) {
+      requestStream = this.userService.uploadAvatar(this.selectedFile).pipe(
+        switchMap(() => updateText$) 
+      );
+    } else {
+
+      requestStream = updateText$;
+    }
+
+    requestStream.subscribe({
       next: (updatedUser: any) => { 
-        
         this.profileData = updatedUser;
-        this.showEditModal = false;
+        this.showEditModal = false;     
         alert('Cập nhật thành công!');
       },
       error: (err: any) => {
