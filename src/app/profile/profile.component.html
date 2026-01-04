@@ -12,6 +12,7 @@
   <div *ngIf="!isLoading && profileData" class="profile-content">
 
     <div class="profile-header">
+      
       <div class="avatar-section">
         <img [src]="profileData.avatarUrl || 'assets/default-avatar.png'" alt="Avatar" class="profile-avatar">
       </div>
@@ -19,7 +20,7 @@
       <div class="info-section">
 
         <div class="name-row">
-
+          
           <h2 class="username">{{ profileData.fullName }}</h2>
           <span style="color: #666; font-size: 0.9rem; margin-left: 10px;">(@{{ profileData.username }})</span>
 
@@ -39,7 +40,7 @@
 
         <div class="stats-row">
           <span><strong>{{ userPosts.length }}</strong> bài viết</span>
-
+          
           <span>
             <strong>{{ profileData.followerCount || 0 }}</strong> người theo dõi
           </span>
@@ -74,9 +75,18 @@
 
   </div>
 </div>
+
 <div class="modal-overlay" *ngIf="showEditModal">
   <div class="modal-content">
     <h3>Chỉnh sửa trang cá nhân</h3>
+
+    <div class="form-group" style="text-align: center;">
+        <label>Ảnh đại diện</label>
+        <img [src]="previewAvatar || 'assets/default-avatar.png'" 
+             style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; margin-bottom: 10px; border: 1px solid #ddd;">
+        <br>
+        <input type="file" (change)="onFileSelected($event)" accept="image/*">
+    </div>
 
     <div class="form-group">
       <label>Tên đăng nhập (Không thể đổi)</label>
