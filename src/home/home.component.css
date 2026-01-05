@@ -289,9 +289,32 @@ textarea {
 .reply-input-box.reply-level-3 { margin-left: -42px; }
 
 @media (max-width: 768px) { 
-  .container { width: 95%; } 
-  .replies-container.level-2, .replies-container.level-3 { margin-left: 20px; }
+  .container { 
+    width: 100%;
+    margin: 10px 0; 
+    padding: 0 10px;
+    box-sizing: border-box;
+  } 
+
+  .box, .post-card {
+    padding: 10px; 
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+
+  h3 { font-size: 1rem; }
+  .post-info h4 { font-size: 0.9rem; }
+  .post-content { font-size: 0.9rem; }
+
+  .replies-container.level-2, .replies-container.level-3 { margin-left: 15px; } /* Giảm margin thụt lề */
   .reply-input-box { margin-left: 0; }
+
+  .notification-panel {
+    width: 90%; 
+    right: 5%;
+    bottom: 80px; 
+    }
 }
 
 /* NOTIFICATION */

@@ -64,12 +64,18 @@
         <p>Chưa có bài viết nào.</p>
       </div>
 
-      <div *ngFor="let post of userPosts" class="post-item">
+      <div *ngFor="let post of userPosts" 
+           class="post-item" 
+           [routerLink]="['/posts', post.id]">
+        
         <div class="post-card-simple">
           <div class="post-meta">{{ post.createdAt | date:'shortDate' }}</div>
-          <div class="post-text">{{ post.content }}</div>
+          
+          <div class="post-text">{{ post.content | slice:0:100 }}{{ post.content.length > 100 ? '...' : '' }}</div>
+          
           <div class="post-footer">❤️ {{ post.likeCount }} • 💬 {{ post.commentCount }}</div>
         </div>
+
       </div>
     </div>
 
