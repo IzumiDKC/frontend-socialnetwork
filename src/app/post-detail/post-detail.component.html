@@ -1,0 +1,85 @@
+<div class="fb-container" *ngIf="post; else loading">
+
+  <div class="media-section">
+    <button class="close-btn" routerLink="/">✕</button>
+
+    <div class="media-wrapper">
+      <img *ngIf="post.imageUrl" [src]="post.imageUrl" alt="Post Image" class="main-image">
+
+      <div *ngIf="!post.imageUrl" class="text-only-display">
+        {{ post.content }}
+      </div>
+    </div>
+  </div>
+
+  <div class="interaction-section">
+    
+    <div class="post-header">
+      <img class="avatar" src="assets/default-avatar.png" alt="User Avatar">
+      <div class="user-info">
+        <span class="username">{{ post.username }}</span>
+        <span class="timestamp">{{ post.createdAt | date:'short' }}</span>
+      </div>
+      <button class="options-btn">...</button>
+    </div>
+
+    <div class="post-body-scroll">
+      <div class="caption" *ngIf="post.imageUrl">
+        {{ post.content }}
+      </div>
+      
+      <hr class="divider">
+
+      <div class="comments-list">
+        <div *ngFor="let comment of comments" class="comment-item">
+          <img class="cmt-avatar" src="assets/default-avatar.png">
+          <div class="cmt-content">
+            <div class="cmt-bubble">
+              <strong>User {{ comment.userId }}</strong>
+              <span>{{ comment.content }}</span>
+            </div>
+            <div class="cmt-actions">
+              <span>Thích</span> · <span>Phản hồi</span> · <span class="time">{{ comment.createdAt | date:'shortTime' }}</span>
+            </div>
+          </div>
+        </div>
+        
+        <div *ngIf="comments.length === 0" class="no-comments">
+          Chưa có bình luận nào. Hãy là người đầu tiên!
+        </div>
+      </div>
+    </div>
+
+    <div class="post-footer">
+      <div class="stats">
+        <span class="like-stat">❤️ {{ post.likeCount }}</span>
+        <span class="cmt-stat">{{ post.commentCount }} bình luận</span>
+      </div>
+
+      <div class="action-buttons">
+        <button [class.active-like]="post.likedByCurrentUser" (click)="toggleLike()">
+          <i class="fa fa-thumbs-up"></i> Thích
+        </button>
+        <button><i class="fa fa-comment"></i> Bình luận</button>
+        <button><i class="fa fa-share"></i> Chia sẻ</button>
+      </div>
+
+      <div class="input-area">
+        <img class="avatar-small" src="assets/default-avatar.png">
+        <div class="input-wrapper">
+          <input 
+            type="text" 
+            placeholder="Viết bình luận..." 
+            [(ngModel)]="newCommentContent" 
+            (keyup.enter)="sendComment()">
+          <button (click)="sendComment()" [disabled]="!newCommentContent"><i class="fa fa-paper-plane"></i></button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<ng-template #loading>
+  <div class="loading-screen">Đang tải bài viết...</div>
+</ng-template>
