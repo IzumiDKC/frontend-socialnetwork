@@ -1,1 +1,35 @@
-/* You can add global styles to this file, and also import other style files */
+/* Mặc định (Light Mode) */
+:root {
+  --bg-body: #f0f2f5;
+  --bg-card: #ffffff;
+  --bg-hover: #f2f2f2;
+  --bg-input: #f0f2f5;
+  
+  --text-main: #050505;
+  --text-sub: #65676b;
+  
+  --border-color: #ddd;
+  --shadow: 0 1px 2px rgba(0,0,0,0.1);
+  
+  --primary-color: #1877f2;
+}
+
+/* Dark Mode (ghi đè biến) */
+.dark-mode {
+  --bg-body: #18191a;
+  --bg-card: #242526;
+  --bg-hover: #3a3b3c;
+  --bg-input: #3a3b3c;
+  
+  --text-main: #e4e6eb;
+  --text-sub: #b0b3b8;
+  
+  --border-color: #3e4042;
+  --shadow: 0 1px 2px rgba(0,0,0,0.5);
+}
+
+body {
+  background-color: var(--bg-body);
+  color: var(--text-main);
+  transition: background-color 0.3s, color 0.3s;
+}
