@@ -72,7 +72,7 @@
         <div class="input-wrapper">
           <input type="text" placeholder="Viết bình luận..." [(ngModel)]="newCommentContent"
             (keyup.enter)="sendComment()">
-          <button (click)="sendComment()" [disabled]="!newCommentContent?.trim()">➤</button>
+          <button (click)="sendComment()" [disabled]="!newCommentContent.trim()">➤</button>
         </div>
       </div>
     </div>
