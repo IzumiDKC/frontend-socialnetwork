@@ -32,14 +32,14 @@ export class ProfileComponent implements OnInit {
   isMyProfile: boolean = false; 
   isFollowing: boolean = false; 
 
-  // Biến cho Modal Edit (Chỉnh sửa)
+  // Modal Edit
   showEditModal: boolean = false;
   editData = {
     fullName: '',
     bio: ''
   };
 
-  // Biến cho Upload Avatar
+  // Upload Avatar
   selectedFile: File | null = null;
   previewAvatar: string | null = null;
 
@@ -80,12 +80,10 @@ export class ProfileComponent implements OnInit {
     });
   }
 
-  // Kiểm tra xem trang này có phải của mình không
   checkIfMyProfile() {
     this.isMyProfile = (this.targetUsername === this.myUsername);
   }
 
-  // Tải dữ liệu Profile + Bài viết
   loadProfileData(username: string) {
     this.isLoading = true;
     this.profileData = null;
@@ -98,12 +96,10 @@ export class ProfileComponent implements OnInit {
         }
         this.profileData = user;
 
-        // Nếu xem người khác -> Kiểm tra xem đã follow chưa
         if (!this.isMyProfile && this.myId) {
           this.checkFollowStatus(this.myId, user.id);
         }
 
-        // Lấy danh sách bài viết
         return this.postService.getPostsByUserId(user.id);
       })
     ).subscribe({
@@ -118,14 +114,12 @@ export class ProfileComponent implements OnInit {
     });
   }
 
-  // Kiểm tra trạng thái Follow
   checkFollowStatus(sourceId: number, targetId: number) {
     this.userService.getFollowingIds(sourceId).subscribe((ids: number[]) => {
       this.isFollowing = ids.includes(targetId);
     });
   }
 
-  // Hành động Follow / Unfollow
   toggleFollow() {
     if (!this.myId || !this.profileData) return;
 
