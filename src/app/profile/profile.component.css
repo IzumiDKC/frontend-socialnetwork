@@ -6,11 +6,13 @@
 }
 
 /* Loading & Error */
-.loading-box, .error-box {
+.loading-box,
+.error-box {
   text-align: center;
   margin-top: 50px;
   color: #666;
 }
+
 .btn-back {
   margin-top: 10px;
   padding: 8px 16px;
@@ -68,9 +70,21 @@
   border: none;
 }
 
-.btn-primary { background-color: #0095f6; color: white; }
-.btn-secondary { background-color: #efefef; color: black; }
-.btn-outline { background-color: white; border: 1px solid #dbdbdb; color: black; }
+.btn-primary {
+  background-color: #0095f6;
+  color: white;
+}
+
+.btn-secondary {
+  background-color: #efefef;
+  color: black;
+}
+
+.btn-outline {
+  background-color: white;
+  border: 1px solid #dbdbdb;
+  color: black;
+}
 
 .stats-row {
   display: flex;
@@ -103,7 +117,11 @@
   padding: 40px;
   color: #888;
 }
-.no-posts .icon { font-size: 3rem; margin-bottom: 10px; }
+
+.no-posts .icon {
+  font-size: 3rem;
+  margin-bottom: 10px;
+}
 
 /* Item bài viết (hiển thị dạng ô vuông đơn giản) */
 .post-item {
@@ -129,7 +147,8 @@
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
-  -webkit-line-clamp: 4; /* Giới hạn dòng */
+  -webkit-line-clamp: 4;
+  /* Giới hạn dòng */
   line-clamp: 4;
   -webkit-box-orient: vertical;
   font-size: 0.9rem;
@@ -150,16 +169,40 @@
 
 /* Mobile Responsive */
 @media (max-width: 768px) {
-  .profile-header { flex-direction: column; align-items: center; text-align: center; }
-  .avatar-section { margin: 0 0 20px 0; }
-  .name-row { justify-content: center; }
-  .stats-row { justify-content: center; gap: 15px; font-size: 0.9rem; }
-  .posts-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .profile-header {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .avatar-section {
+    margin: 0 0 20px 0;
+  }
+
+  .name-row {
+    justify-content: center;
+  }
+
+  .stats-row {
+    justify-content: center;
+    gap: 15px;
+    font-size: 0.9rem;
+  }
+
+  .posts-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
 }
+
 .modal-overlay {
   position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0, 0, 0, 0.5); /* Màn hình tối */
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  /* Màn hình tối */
   display: flex;
   justify-content: center;
   align-items: center;
@@ -171,7 +214,7 @@
   padding: 20px;
   border-radius: 10px;
   width: 400px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
   animation: slideDown 0.3s ease-out;
 }
 
@@ -184,18 +227,22 @@
 .form-group {
   margin-bottom: 15px;
 }
+
 .form-group label {
   display: block;
   margin-bottom: 5px;
   font-weight: 600;
   font-size: 0.9rem;
 }
-.form-group input, .form-group textarea {
+
+.form-group input,
+.form-group textarea {
   width: 100%;
   padding: 8px;
   border: 1px solid #ccc;
   border-radius: 5px;
-  box-sizing: border-box; /* không bị tràn */
+  box-sizing: border-box;
+  /* không bị tràn */
 }
 
 .input-disabled {
@@ -219,6 +266,7 @@
   cursor: pointer;
   font-weight: 600;
 }
+
 .btn-save {
   background: #1877f2;
   color: white;
@@ -230,17 +278,25 @@
 }
 
 @keyframes slideDown {
-  from { transform: translateY(-20px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
+
 .post-item {
-  cursor: pointer; 
+  cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .post-item:hover {
   transform: scale(1.02);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   z-index: 1;
 }
 

@@ -29,8 +29,10 @@ export class HomeComponent implements OnInit, OnDestroy {
   private searchSubject = new Subject<string>();
 
   // --- Biến Post ---
-  posts: any[] = [];
-  newPostContent = '';
+  posts: any[] = []; 
+  newPostContent: string = '';
+  selectedFile: File | null = null; 
+  previewUrl: string | null = null;
 
   // --- Biến Reply ---
   activeReplyCommentId: number | null = null;
@@ -41,6 +43,8 @@ export class HomeComponent implements OnInit, OnDestroy {
   unreadCount: number = 0;
   showNotifications: boolean = false;
   showToastData: any = null; // Dùng để hiện thông báo nổi (Toast)
+
+  myFullName = '';
 
   constructor(
     private keycloak: KeycloakService,
@@ -58,6 +62,7 @@ export class HomeComponent implements OnInit, OnDestroy {
         next: (user: any) => {
           this.myId = user.id;
           this.myAvatarUrl = user.avatarUrl;
+          this.myFullName = user.fullName || user.username;
           this.refreshFollowing();
 
           if (this.myId) {
@@ -80,8 +85,6 @@ export class HomeComponent implements OnInit, OnDestroy {
     // Ngắt kết nối khi rời trang (tùy chọn, thường thì để App Component quản lý tốt hơn)
     this.webSocketService.disconnect();
   }
-
-  // XỬ LÝ THÔNG BÁO
 
   handleNewNotification(noti: any) {
     this.notifications.unshift(noti);
@@ -153,14 +156,37 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   createPost() {
-    if (!this.newPostContent.trim()) return;
-    this.postService.createPost(this.newPostContent).subscribe({
-      next: () => {
+    if (!this.newPostContent.trim() && !this.selectedFile) {
+        return;
+    }
+
+    this.postService.createPost(this.newPostContent, this.selectedFile).subscribe({
+      next: (res) => {
+        console.log('Đăng thành công', res);
         this.newPostContent = '';
+        this.selectedFile = null;
+        this.previewUrl = null;
+        
         this.loadFeed();
       },
-      error: (err: any) => alert('Lỗi: ' + (err.message || err))
+      error: (err) => {
+        console.error('Lỗi đăng bài', err);
+      }
     });
+  }
+
+  onFileSelected(event: any) {
+    const file: File = event.target.files[0];
+    
+    if (file) {
+      this.selectedFile = file;
+
+      const reader = new FileReader();
+      reader.onload = (e: any) => {
+        this.previewUrl = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
   }
 
   onLikePost(post: any) {
@@ -174,7 +200,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   togglePostMenu(post: any) {
-    this.posts.forEach(p => {
+    this.posts.forEach((p: any) => { 
       if (p !== post) p.showMenu = false;
     });
     post.showMenu = !post.showMenu;
@@ -186,7 +212,7 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.postService.deletePost(post.id).subscribe({
       next: () => {
         alert('Đã xóa bài viết.');
-        this.posts = this.posts.filter(p => p.id !== post.id);
+        this.posts = this.posts.filter((p: any) => p.id !== post.id);
       },
       error: (err: any) => {
         console.error(err);
@@ -195,7 +221,7 @@ export class HomeComponent implements OnInit, OnDestroy {
     });
   }
 
-  // QUẢN LÝ COMMENTS (TREE STRUCTURE)
+  // QUẢN LÝ COMMENTS
 
   toggleComments(post: any) {
     post.showComments = !post.showComments;
@@ -207,7 +233,6 @@ export class HomeComponent implements OnInit, OnDestroy {
   loadComments(post: any) {
     this.postService.getComments(post.id).subscribe({
       next: (flatComments: any[]) => {
-        // Chuyển đổi danh sách phẳng từ API thành Cây (Tree)
         post.comments = this.buildCommentTree(flatComments);
       },
       error: (err: any) => console.error('Lỗi tải comment:', err)
@@ -271,6 +296,7 @@ export class HomeComponent implements OnInit, OnDestroy {
         const replyToDisplay = {
           ...savedReply,
           username: this.myUsername,
+          fullName: this.myFullName,
           avatarUrl: this.myAvatarUrl,
           children: []
         };
@@ -309,6 +335,7 @@ export class HomeComponent implements OnInit, OnDestroy {
         const commentToDisplay = {
           ...savedComment,
           username: this.myUsername,
+          fullName: this.myFullName,
           avatarUrl: this.myAvatarUrl,
           children: []
         };

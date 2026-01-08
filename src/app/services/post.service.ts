@@ -14,8 +14,16 @@ export class PostService {
     return this.http.get<any[]>(`${this.baseUrl}/feed`);
   }
 
-  createPost(content: string): Observable<any> {
-    return this.http.post(this.baseUrl, { content });
+  createPost(content: string, file: File | null): Observable<any> {
+    const formData = new FormData();
+    
+    formData.append('content', content);
+
+    if (file) {
+      formData.append('file', file);
+    }
+
+    return this.http.post(this.baseUrl, formData);
   }
   likePost(postId: number): Observable<number> {
     return this.http.post<number>(`${this.baseUrl}/${postId}/like`, {});

@@ -11,15 +11,9 @@ export const routes: Routes = [
     component: HomeComponent, 
     canActivate: [authGuard] 
   },
-  
-  /* { 
-    path: 'profile', 
-    component: ProfileComponent, 
-    canActivate: [authGuard] 
-  }, */
 
   { 
-    path: ':username', 
+    path: ':username', // Change from 'profile' to ':username'
     component: ProfileComponent, 
     canActivate: [authGuard] 
   },
@@ -27,7 +21,7 @@ export const routes: Routes = [
   { 
     path: 'posts/:id', 
     component: PostDetailComponent,
-    canActivate: [authGuard] // Nên thêm guard nếu muốn bảo mật
+    canActivate: [authGuard]
   },
 
   { path: '**', redirectTo: 'home' }
