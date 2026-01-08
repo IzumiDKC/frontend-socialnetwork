@@ -18,28 +18,16 @@ import { FormsModule } from '@angular/forms'; // Quan trọng cho ngModel
   styleUrls: ['./profile.component.css']
 })
 export class ProfileComponent implements OnInit {
-  // Biến định danh
   targetUsername: string = '';
   myUsername: string = '';   
   myId: number | null = null; 
-
-  // Dữ liệu hiển thị
   profileData: any = null;    
   userPosts: any[] = [];      
-
-  // Trạng thái UI
   isLoading: boolean = true;
   isMyProfile: boolean = false; 
   isFollowing: boolean = false; 
-
-  // Modal Edit
   showEditModal: boolean = false;
-  editData = {
-    fullName: '',
-    bio: ''
-  };
-
-  // Upload Avatar
+  editData = { fullName: '', bio: '' };
   selectedFile: File | null = null;
   previewAvatar: string | null = null;
 
@@ -84,20 +72,18 @@ export class ProfileComponent implements OnInit {
     this.isMyProfile = (this.targetUsername === this.myUsername);
   }
 
-  loadProfileData(username: string) {
+ loadProfileData(username: string) {
     this.isLoading = true;
     this.profileData = null;
     this.userPosts = [];
 
     this.userService.getUserInfo(username).pipe(
       switchMap((user: any) => {
-        if (!user) {
-          throw new Error('User not found');
-        }
+        if (!user) throw new Error('User not found');
         this.profileData = user;
 
-        if (!this.isMyProfile && this.myId) {
-          this.checkFollowStatus(this.myId, user.id);
+        if (!this.isMyProfile) {
+            this.isFollowing = user.followedByCurrentUser; 
         }
 
         return this.postService.getPostsByUserId(user.id);
@@ -123,19 +109,29 @@ export class ProfileComponent implements OnInit {
   toggleFollow() {
     if (!this.myId || !this.profileData) return;
 
+    const previousState = this.isFollowing;
+
+    // OPTIMISTIC UI
+    this.isFollowing = !this.isFollowing;
+
     if (this.isFollowing) {
-      alert('Chức năng bỏ theo dõi chưa cập nhật!');
+        this.profileData.followerCount = (this.profileData.followerCount || 0) + 1;
     } else {
-      this.userService.followUser(this.myId, this.profileData.id).subscribe({
-        next: () => {
-          this.isFollowing = true;
-          if (this.profileData.followerCount !== undefined) {
-             this.profileData.followerCount++;
-          }
-        },
-        error: (err: any) => alert('Lỗi khi follow: ' + err.message)
-      });
+        this.profileData.followerCount = Math.max(0, (this.profileData.followerCount || 0) - 1);
     }
+
+    this.userService.followUser(this.myId, this.profileData.id).subscribe({
+      next: () => {
+        console.log(this.isFollowing ? 'Đã follow' : 'Đã unfollow');
+      },
+      error: (err: any) => {
+        this.isFollowing = previousState;
+        if (this.isFollowing) this.profileData.followerCount++;
+        else this.profileData.followerCount--;
+        
+        alert('Lỗi kết nối: ' + err.message);
+      }
+    });
   }
 
   onFileSelected(event: any) {
