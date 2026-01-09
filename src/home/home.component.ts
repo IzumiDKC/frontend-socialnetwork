@@ -29,9 +29,9 @@ export class HomeComponent implements OnInit, OnDestroy {
   private searchSubject = new Subject<string>();
 
   // --- Biến Post ---
-  posts: any[] = []; 
+  posts: any[] = [];
   newPostContent: string = '';
-  selectedFile: File | null = null; 
+  selectedFile: File | null = null;
   previewUrl: string | null = null;
 
   // --- Biến Reply ---
@@ -46,12 +46,16 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   myFullName = '';
 
+  showDeleteModal: boolean = false;
+  postIdToDelete: number | null = null;
+
   constructor(
     private keycloak: KeycloakService,
     private userService: UserService,
     private postService: PostService,
     private webSocketService: WebSocketService
-  ) {}
+  ) { }
+
 
   async ngOnInit() {
     const profile = await this.keycloak.loadUserProfile();
@@ -157,7 +161,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   createPost() {
     if (!this.newPostContent.trim() && !this.selectedFile) {
-        return;
+      return;
     }
 
     this.postService.createPost(this.newPostContent, this.selectedFile).subscribe({
@@ -166,7 +170,7 @@ export class HomeComponent implements OnInit, OnDestroy {
         this.newPostContent = '';
         this.selectedFile = null;
         this.previewUrl = null;
-        
+
         this.loadFeed();
       },
       error: (err) => {
@@ -177,7 +181,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   onFileSelected(event: any) {
     const file: File = event.target.files[0];
-    
+
     if (file) {
       this.selectedFile = file;
 
@@ -200,7 +204,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   togglePostMenu(post: any) {
-    this.posts.forEach((p: any) => { 
+    this.posts.forEach((p: any) => {
       if (p !== post) p.showMenu = false;
     });
     post.showMenu = !post.showMenu;
@@ -381,5 +385,39 @@ export class HomeComponent implements OnInit, OnDestroy {
       }
     }
     return false;
+  }
+
+  onDeleteRequest(post: any) {
+    this.postIdToDelete = post.id;
+    this.showDeleteModal = true;
+  }
+
+  closeDeleteModal() {
+    this.showDeleteModal = false;
+    this.postIdToDelete = null;
+  }
+  confirmDelete() {
+    if (this.postIdToDelete) {
+      this.postService.deletePost(this.postIdToDelete).subscribe({
+        next: () => {
+          this.posts = this.posts.filter(p => p.id !== this.postIdToDelete);
+          this.closeDeleteModal();
+          this.postIdToDelete = null;
+
+          this.showToast({
+            senderName: '',
+            content: 'Đã chuyển bài viết vào thùng rác.'
+          });
+        },
+        error: (err) => {
+          console.error("Lỗi xóa bài:", err);
+          this.showToast({
+            senderName: 'Lỗi',
+            content: 'Có lỗi xảy ra, vui lòng thử lại.'
+          });
+          this.closeDeleteModal();
+        }
+      });
+    }
   }
 }
