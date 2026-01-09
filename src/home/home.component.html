@@ -3,23 +3,25 @@
   <div class="box">
     <textarea [(ngModel)]="newPostContent" placeholder="Bạn đang nghĩ gì thế?"></textarea>
 
-    <div *ngIf="previewUrl" class="preview-container" style="position: relative; margin-top: 10px; margin-bottom: 10px;">
-       <img [src]="previewUrl" style="max-width: 100%; max-height: 300px; border-radius: 8px; object-fit: contain;">
-       <button (click)="selectedFile = null; previewUrl = null" 
-               style="position: absolute; top: 5px; right: 5px; background: rgba(0,0,0,0.6); color: white; border: none; border-radius: 50%; width: 25px; height: 25px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
-           ✕
-       </button>
+    <div *ngIf="previewUrl" class="preview-container"
+      style="position: relative; margin-top: 10px; margin-bottom: 10px;">
+      <img [src]="previewUrl" style="max-width: 100%; max-height: 300px; border-radius: 8px; object-fit: contain;">
+      <button (click)="selectedFile = null; previewUrl = null"
+        style="position: absolute; top: 5px; right: 5px; background: rgba(0,0,0,0.6); color: white; border: none; border-radius: 50%; width: 25px; height: 25px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+        ✕
+      </button>
     </div>
 
-    <div class="post-actions-row" style="display: flex; justify-content: space-between; align-items: center; margin-top: 5px;">
-        <label class="btn-icon" style="cursor: pointer; color: #1877f2; display: flex; align-items: center; gap: 5px;">
-            <span style="font-size: 1.5rem;">📷</span> 
-            <span style="font-size: 0.9rem; font-weight: 500;">Ảnh/Video</span>
-            <input type="file" (change)="onFileSelected($event)" accept="image/*" style="display: none;">
-        </label>
-        <button class="btn-post" (click)="createPost()" [disabled]="!newPostContent.trim() && !selectedFile">
-            Đăng bài
-        </button>
+    <div class="post-actions-row"
+      style="display: flex; justify-content: space-between; align-items: center; margin-top: 5px;">
+      <label class="btn-icon" style="cursor: pointer; color: #1877f2; display: flex; align-items: center; gap: 5px;">
+        <span style="font-size: 1.5rem;">📷</span>
+        <span style="font-size: 0.9rem; font-weight: 500;">Ảnh/Video</span>
+        <input type="file" (change)="onFileSelected($event)" accept="image/*" style="display: none;">
+      </label>
+      <button class="btn-post" (click)="createPost()" [disabled]="!newPostContent.trim() && !selectedFile">
+        Đăng bài
+      </button>
     </div>
   </div>
 
@@ -44,7 +46,9 @@
       <div class="menu-container" *ngIf="post.userId === myId">
         <button class="btn-menu" (click)="togglePostMenu(post)">•••</button>
         <div class="dropdown-menu" *ngIf="post.showMenu">
-          <button class="dropdown-item text-danger" (click)="deletePost(post)">Xóa bài viết</button>
+          <button class="dropdown-item text-danger" (click)="onDeleteRequest(post)">
+            Xóa bài viết
+          </button>
         </div>
       </div>
     </div>
@@ -52,7 +56,8 @@
     <div class="post-content">{{ post.content }}</div>
 
     <div *ngIf="post.imageUrl" class="post-image-container" style="margin-top: 10px; margin-bottom: 10px;">
-        <img [src]="post.imageUrl" alt="Post Image" style="width: 100%; height: auto; max-height: 500px; object-fit: cover; border-radius: 4px; border: 1px solid #f0f2f5;">
+      <img [src]="post.imageUrl" alt="Post Image"
+        style="width: 100%; height: auto; max-height: 500px; object-fit: cover; border-radius: 4px; border: 1px solid #f0f2f5;">
     </div>
 
     <div class="post-stats">
@@ -72,25 +77,31 @@
         <div *ngIf="!myAvatarUrl" class="avatar-placeholder avatar-small">
           {{ (myFullName || myUsername)?.charAt(0)?.toUpperCase() }}
         </div>
-        
-        <input class="comment-input" placeholder="Viết bình luận..." [(ngModel)]="post.newCommentInput" (keyup.enter)="submitComment(post)">
-        <button class="btn-send-comment" (click)="submitComment(post)" [disabled]="!post.newCommentInput?.trim()">Gửi</button>
+
+        <input class="comment-input" placeholder="Viết bình luận..." [(ngModel)]="post.newCommentInput"
+          (keyup.enter)="submitComment(post)">
+        <button class="btn-send-comment" (click)="submitComment(post)"
+          [disabled]="!post.newCommentInput?.trim()">Gửi</button>
       </div>
 
       <div class="comment-list">
         <div *ngFor="let c1 of post.comments" class="comment-tree-node">
-          <ng-container *ngTemplateOutlet="commentTemplate; context: { $implicit: c1, post: post, level: 1 }"></ng-container>
+          <ng-container
+            *ngTemplateOutlet="commentTemplate; context: { $implicit: c1, post: post, level: 1 }"></ng-container>
           <div class="replies-container level-2" *ngIf="c1.children?.length > 0">
             <div *ngFor="let c2 of c1.children">
-              <ng-container *ngTemplateOutlet="commentTemplate; context: { $implicit: c2, post: post, level: 2 }"></ng-container>
+              <ng-container
+                *ngTemplateOutlet="commentTemplate; context: { $implicit: c2, post: post, level: 2 }"></ng-container>
               <div class="replies-container level-3" *ngIf="c2.children?.length > 0">
-                <ng-container *ngTemplateOutlet="recursiveReplies; context: { list: c2.children, post: post }"></ng-container>
+                <ng-container
+                  *ngTemplateOutlet="recursiveReplies; context: { list: c2.children, post: post }"></ng-container>
               </div>
             </div>
           </div>
         </div>
-        
-        <div *ngIf="post.comments && post.comments.length === 0" style="text-align: center; font-size: 0.85rem; color: #888; margin-top: 10px;">
+
+        <div *ngIf="post.comments && post.comments.length === 0"
+          style="text-align: center; font-size: 0.85rem; color: #888; margin-top: 10px;">
           Chưa có bình luận nào.
         </div>
       </div>
@@ -100,7 +111,8 @@
 
 <ng-template #recursiveReplies let-list="list" let-post="post">
   <div *ngFor="let item of list">
-    <ng-container *ngTemplateOutlet="commentTemplate; context: { $implicit: item, post: post, level: 3 }"></ng-container>
+    <ng-container
+      *ngTemplateOutlet="commentTemplate; context: { $implicit: item, post: post, level: 3 }"></ng-container>
     <div *ngIf="item.children?.length > 0">
       <ng-container *ngTemplateOutlet="recursiveReplies; context: { list: item.children, post: post }"></ng-container>
     </div>
@@ -123,7 +135,8 @@
       <div class="comment-meta">
         <span>{{ comment.createdAt | date:'short' }}</span>
         <button class="action-link" (click)="initReply(comment)">Trả lời</button>
-        <button *ngIf="comment.userId === myId" class="comment-delete" (click)="deleteComment(post, comment.id)">Xóa</button>
+        <button *ngIf="comment.userId === myId" class="comment-delete"
+          (click)="deleteComment(post, comment.id)">Xóa</button>
       </div>
 
       <div *ngIf="activeReplyCommentId === comment.id" class="reply-input-box" [class.reply-level-3]="level >= 3">
@@ -133,7 +146,8 @@
         </div>
 
         <div class="reply-input-wrapper">
-          <input [(ngModel)]="replyContent" class="reply-input" placeholder="Viết phản hồi..." (keyup.enter)="submitReply(post, comment.id)" autofocus>
+          <input [(ngModel)]="replyContent" class="reply-input" placeholder="Viết phản hồi..."
+            (keyup.enter)="submitReply(post, comment.id)" autofocus>
           <div class="reply-actions">
             <button class="btn-cancel-reply" (click)="cancelReply()">Hủy</button>
             <button class="btn-submit-reply" (click)="submitReply(post, comment.id)">Gửi</button>
@@ -170,5 +184,25 @@
 <div class="toast-notification" *ngIf="showToastData">
   <div class="toast-body">
     <strong>{{ showToastData.senderName }}</strong> {{ showToastData.content }}
+  </div>
+</div>
+<div class="custom-modal-overlay" *ngIf="showDeleteModal" (click)="closeDeleteModal()">
+  <div class="custom-modal" (click)="$event.stopPropagation()">
+
+    <div class="modal-header">
+      <h3>Chuyển vào thùng rác?</h3>
+      <button class="btn-close-icon" (click)="closeDeleteModal()">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <p>Các mục trong thùng rác sẽ tự động bị xóa sau 30 ngày. Bạn có thể xóa các mục này khỏi thùng rác sớm hơn trong
+        phần Cài đặt.</p>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-cancel" (click)="closeDeleteModal()">Hủy</button>
+      <button class="btn-confirm" (click)="confirmDelete()">Chuyển</button>
+    </div>
+
   </div>
 </div>
