@@ -12,21 +12,18 @@
   <div *ngIf="!isLoading && profileData" class="profile-content">
 
     <div class="profile-header">
-
       <div class="avatar-section">
         <img [src]="profileData.avatarUrl || 'assets/default-avatar.png'" alt="Avatar" class="profile-avatar">
       </div>
 
       <div class="info-section">
-
         <div class="name-row">
-
           <h2 class="username">{{ profileData.fullName }}</h2>
           <span style="color: #666; font-size: 0.9rem; margin-left: 10px;">(@{{ profileData.username }})</span>
 
           <div class="actions">
             <ng-container *ngIf="isMyProfile; else otherProfileActions">
-              <button class="btn btn-secondary" (click)="openEditModal()">✏️ Chỉnh sửa trang cá nhân</button>
+              <button class="btn btn-secondary" (click)="openEditModal()">✏️ Chỉnh sửa </button>
             </ng-container>
 
             <ng-template #otherProfileActions>
@@ -35,19 +32,12 @@
               <button class="btn btn-secondary">Nhắn tin</button>
             </ng-template>
           </div>
-
         </div>
 
         <div class="stats-row">
           <span><strong>{{ userPosts.length }}</strong> bài viết</span>
-
-          <span>
-            <strong>{{ profileData.followerCount || 0 }}</strong> người theo dõi
-          </span>
-
-          <span>
-            <strong>{{ profileData.followingCount || 0 }}</strong> đang theo dõi
-          </span>
+          <span><strong>{{ profileData.followerCount || 0 }}</strong> người theo dõi</span>
+          <span><strong>{{ profileData.followingCount || 0 }}</strong> đang theo dõi</span>
         </div>
 
         <div class="bio-row">
@@ -65,15 +55,19 @@
       </div>
 
       <div *ngFor="let post of userPosts" class="post-item" [routerLink]="['/posts', post.id]">
-
-        <div class="post-card-simple">
-          <div class="post-meta">{{ post.createdAt | date:'shortDate' }}</div>
-
-          <div class="post-text">{{ post.content | slice:0:100 }}{{ post.content.length > 100 ? '...' : '' }}</div>
-
-          <div class="post-footer">❤️ {{ post.likeCount }} • 💬 {{ post.commentCount }}</div>
+        <div *ngIf="post.imageUrl" class="post-thumbnail-wrapper">
+           <img [src]="post.imageUrl" class="post-thumbnail" loading="lazy">
+           <div class="hover-stats">
+              <span>❤️ {{ post.likeCount }}</span>
+              <span>💬 {{ post.commentCount }}</span>
+           </div>
         </div>
 
+        <div *ngIf="!post.imageUrl" class="post-card-simple">
+          <div class="post-meta">{{ post.createdAt | date:'shortDate' }}</div>
+          <div class="post-text">{{ post.content | slice:0:150 }}{{ post.content.length > 150 ? '...' : '' }}</div>
+          <div class="post-footer">❤️ {{ post.likeCount }} • 💬 {{ post.commentCount }}</div>
+        </div>
       </div>
     </div>
 
@@ -84,32 +78,62 @@
   <div class="modal-content">
     <h3>Chỉnh sửa trang cá nhân</h3>
 
-    <div class="form-group" style="text-align: center;">
-      <label>Ảnh đại diện</label>
-      <img [src]="previewAvatar || 'assets/default-avatar.png'"
-        style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; margin-bottom: 10px; border: 1px solid #ddd;">
-      <br>
-      <input type="file" (change)="onFileSelected($event)" accept="image/*">
+    <div class="upload-avatar-wrapper">
+      
+      <div class="avatar-preview-container">
+        <img *ngIf="previewAvatar || profileData.avatarUrl" 
+             [src]="previewAvatar || profileData.avatarUrl" 
+             class="avatar-preview-img">
+        
+        <div *ngIf="!previewAvatar && !profileData.avatarUrl" class="avatar-preview-placeholder">
+           {{ (profileData.fullName || profileData.username)?.charAt(0)?.toUpperCase() }}
+        </div>
+      </div>
+
+      <div class="avatar-actions">
+        <h4 class="username-display">{{ profileData.username }}</h4>
+        <label class="btn-change-avatar">
+          Đổi ảnh đại diện
+          <input type="file" (change)="onFileSelected($event)" accept="image/*" style="display: none;">
+        </label>
+      </div>
+
     </div>
 
-    <div class="form-group">
-      <label>Tên đăng nhập (Không thể đổi)</label>
-      <input type="text" [value]="profileData.username" disabled class="input-disabled">
-    </div>
+    <div class="form-container">
+      
+      <div class="form-group">
+        <label>Tên người dùng</label>
+        <input type="text" [value]="profileData.username" disabled class="input-disabled">
+      </div>
 
-    <div class="form-group">
-      <label>Tên hiển thị (Fullname)</label>
-      <input type="text" [(ngModel)]="editData.fullName" placeholder="Nhập tên hiển thị...">
-    </div>
+      <div class="form-group">
+        <label>Tên hiển thị</label>
+        <input type="text" 
+               [(ngModel)]="editData.fullName" 
+               placeholder="Tên hiển thị..."
+               [class.input-error]="validationErrors.fullName">
+        <small *ngIf="validationErrors.fullName" class="error-text">
+          {{ validationErrors.fullName }}
+        </small>
+      </div>
 
-    <div class="form-group">
-      <label>Tiểu sử (Bio)</label>
-      <textarea [(ngModel)]="editData.bio" rows="3" placeholder="Giới thiệu bản thân..."></textarea>
+      <div class="form-group">
+        <label>Tiểu sử</label>
+        <textarea [(ngModel)]="editData.bio" 
+                  rows="3" 
+                  placeholder="Giới thiệu bản thân..."
+                  [class.input-error]="validationErrors.bio"></textarea>
+        <small *ngIf="validationErrors.bio" class="error-text">
+          {{ validationErrors.bio }}
+        </small>
+      </div>
+
     </div>
 
     <div class="modal-actions">
       <button class="btn-cancel" (click)="closeEditModal()">Hủy</button>
-      <button class="btn-save" (click)="saveProfile()">Lưu thay đổi</button>
+      <button class="btn-save" (click)="saveProfile()">Gửi</button>
     </div>
   </div>
 </div>

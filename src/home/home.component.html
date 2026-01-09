@@ -55,10 +55,14 @@
 
     <div class="post-content">{{ post.content }}</div>
 
-    <div *ngIf="post.imageUrl" class="post-image-container" style="margin-top: 10px; margin-bottom: 10px;">
-      <img [src]="post.imageUrl" alt="Post Image"
-        style="width: 100%; height: auto; max-height: 500px; object-fit: cover; border-radius: 4px; border: 1px solid #f0f2f5;">
-    </div>
+<div *ngIf="post.imageUrl" 
+     class="post-image-container" 
+     [routerLink]="['/posts', post.id]"
+     style="margin-top: 10px; margin-bottom: 10px; cursor: pointer;">
+     
+  <img [src]="post.imageUrl" alt="Post Image"
+    style="width: 100%; height: auto; max-height: 500px; object-fit: cover; border-radius: 4px; border: 1px solid #f0f2f5;">
+</div>
 
     <div class="post-stats">
       <span>{{ post.likeCount }} lượt thích</span>
