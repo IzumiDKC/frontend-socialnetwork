@@ -30,6 +30,7 @@ export class ProfileComponent implements OnInit {
   editData = { fullName: '', bio: '' };
   selectedFile: File | null = null;
   previewAvatar: string | null = null;
+  validationErrors: any = {};
 
   constructor(
     private route: ActivatedRoute,
@@ -41,7 +42,7 @@ export class ProfileComponent implements OnInit {
   
   async ngOnInit() {
     this.isLoading = true;
-
+    
     try {
       const keycloakProfile = await this.keycloak.loadUserProfile();
       this.myUsername = keycloakProfile.username || '';
@@ -159,29 +160,32 @@ export class ProfileComponent implements OnInit {
   }
 
   saveProfile() {
+    this.validationErrors = {};
 
     const updateText$ = this.userService.updateProfile(this.editData);
-    
     let requestStream;
-
     if (this.selectedFile) {
       requestStream = this.userService.uploadAvatar(this.selectedFile).pipe(
-        switchMap(() => updateText$) 
+        switchMap(() => updateText$)
       );
     } else {
-
       requestStream = updateText$;
     }
 
     requestStream.subscribe({
-      next: (updatedUser: any) => { 
+      next: (updatedUser: any) => {
         this.profileData = updatedUser;
-        this.showEditModal = false;     
+        this.showEditModal = false;
         alert('Cập nhật thành công!');
       },
       error: (err: any) => {
         console.error(err);
-        alert('Lỗi cập nhật: ' + (err.error?.message || err.message));
+        
+        if (err.status === 400 && err.error) {
+           this.validationErrors = err.error; 
+        } else {
+           alert('Lỗi cập nhật: ' + (err.error?.message || err.message));
+        }
       }
     });
   }
