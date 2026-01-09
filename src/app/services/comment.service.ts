@@ -14,7 +14,7 @@ export class CommentService {
     return this.http.get<any[]>(`${this.baseUrl}/${postId}/comments`);
   }
 
-  createComment(postId: number, payload: { content: string }): Observable<any> {
+  createComment(postId: number, payload: { content: string; parentId?: number | null }): Observable<any> {
     return this.http.post<any>(`${this.baseUrl}/${postId}/comments`, payload);
   }
 
