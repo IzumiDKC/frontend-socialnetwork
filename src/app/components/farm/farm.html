@@ -1,0 +1,73 @@
+<div class="game-container" *ngIf="farmData">
+  
+  <div class="game-header">
+    <h2>☁️ Khu Vườn (Lv. {{ farmData.level }})</h2>
+    <div class="resources">
+      <span class="gold-badge">{{ CONFIG.CURRENCY }} {{ farmData.gold }}</span>
+      <span class="exp-badge">{{ CONFIG.EXP_UNIT }} {{ farmData.exp }}</span>
+    </div>
+  </div>
+
+  <div class="toolbar-container" *ngIf="gameConfig"> 
+    <div class="toolbar">
+      
+      <button *ngFor="let key of plantKeys" 
+              class="seed-btn"
+              (click)="selectedSeed = key" 
+              [class.active]="selectedSeed === key">
+        
+        <div class="seed-main-icon">{{ gameConfig.plants[key].icon }}</div>
+        <div class="seed-title">{{ gameConfig.plants[key].name }}</div>
+
+        <div class="seed-tooltip">
+          <div class="tip-row">
+            <span class="tip-label">Thời gian:</span>
+            <span class="tip-val time">
+                {{ gameConfig.plants[key].growTime / 1000 }}s
+            </span>
+          </div>
+          <div class="tip-row">
+            <span class="tip-label">Giá mua:</span>
+            <span class="tip-val cost">-{{ gameConfig.plants[key].buyPrice }}</span>
+          </div>
+          <div class="tip-row">
+            <span class="tip-label">Giá bán:</span>
+            <span class="tip-val profit">+{{ gameConfig.plants[key].sellPrice }}</span>
+          </div>
+          <div class="tip-row">
+            <span class="tip-label">Kinh nghiệm:</span>
+            <span class="tip-val xp">+{{ gameConfig.plants[key].expReward }} XP</span>
+          </div>
+        </div>
+      </button>
+
+    </div>
+  </div>
+
+  <div class="farm-grid" *ngIf="gameConfig">
+    <div *ngFor="let slot of farmData.slots" 
+         class="farm-slot" 
+         (click)="onSlotClick(slot)"
+         [class.ready]="slot.displayStatus === 'READY'">
+      
+      <div *ngIf="slot.plantType" class="remove-btn" (click)="onRemovePlant($event, slot.slotId)" title="Bỏ cây">❌</div>
+
+      <span class="slot-number">{{ slot.slotId + 1 }}</span>
+
+      <div *ngIf="slot.plantType" class="plant-content">
+        <div class="plant-icon">
+            {{ gameConfig.plants[slot.plantType]?.icon }}
+        </div>
+        <span class="plant-timer" [class.ready-text]="slot.displayStatus === 'READY'">
+            {{ slot.displayLabel }}
+        </span>
+      </div>
+
+      <div *ngIf="!slot.plantType" class="empty-soil">
+        <div class="soil-icon">☁️</div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
