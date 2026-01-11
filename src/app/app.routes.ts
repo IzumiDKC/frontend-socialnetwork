@@ -3,6 +3,7 @@ import { authGuard } from './guards/auth.guard';
 import { HomeComponent } from '../home/home.component';
 import { ProfileComponent } from './profile/profile.component';
 import { PostDetailComponent } from './post-detail/post-detail.component';
+import { FarmComponent } from './components/farm/farm';
 export const routes: Routes = [
   { path: '', redirectTo: 'home', pathMatch: 'full' },
   
@@ -10,6 +11,12 @@ export const routes: Routes = [
     path: 'home', 
     component: HomeComponent, 
     canActivate: [authGuard] 
+  },
+
+    { 
+    path: 'game', 
+    component: FarmComponent, 
+    canActivate: [authGuard]
   },
 
   { 
@@ -23,6 +30,8 @@ export const routes: Routes = [
     component: PostDetailComponent,
     canActivate: [authGuard]
   },
+
+
 
   { path: '**', redirectTo: 'home' }
 ];
