@@ -1,274 +1,280 @@
-.game-container {
-  padding: 30px;
-  max-width: 750px;
-  margin: 0 auto;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+/* --- GLOBAL RESET --- */
+:host {
+  display: block;
+  width: 100vw; height: 100vh;
+  overflow: hidden;
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+  user-select: none;
 }
 
-/* HEADER: Giữ nguyên, rất sạch sẽ */
-.game-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 25px;
-  background: #fff;
-  padding: 15px 20px;
-  border-radius: 25px; /* Bo tròn nhiều hơn cho mềm mại */
-  box-shadow: 0 4px 15px rgba(135, 206, 235, 0.3); /* Bóng màu xanh trời */
-  border: 2px solid #e1f5fe;
+.game-wrapper {
+  position: relative; width: 100%; height: 100%;
+  background-color: #81d4fa;
 }
 
-.gold-badge {
-  background: #fff9c4;
-  color: #fbc02d;
-  padding: 8px 15px;
-  border-radius: 20px;
-  font-weight: bold;
-  font-size: 1.1rem;
-  border: 1px solid #fff176;
+/* --- BACKGROUNDS --- */
+.bg-layer {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  background-image: url('/assets/game/bg-sky.png');
+  background-size: cover; background-position: center bottom;
+  z-index: 0;
 }
 
-.exp-badge {
-  background: #f3e5f5;
-  color: #8e24aa;
-  padding: 8px 15px;
-  border-radius: 20px;
-  font-weight: bold;
-  margin-left: 10px;
-  border: 1px solid #e1bee7;
+.beanstalk-layer {
+  position: absolute; top: 0; left: 0; bottom: 0;
+  width: 18vmin;
+  background-image: url('/assets/game/beanstalk.png');
+  background-repeat: repeat-y; background-size: contain; background-position: left center;
+  z-index: 10; filter: drop-shadow(2px 0 5px rgba(0,0,0,0.3));
 }
 
-/* --- TOOLBAR: Phong cách Mây --- */
-.toolbar-container {
-  background: linear-gradient(to bottom, #e3f2fd, #bbdefb); /* Gradient xanh mây */
-  padding: 20px;
-  border-radius: 25px;
-  border: 4px solid #fff; /* Viền trắng như mây */
-  text-align: center;
-  margin-bottom: 30px;
-  box-shadow: 0 10px 20px rgba(100, 181, 246, 0.3);
-}
-
-.toolbar {
-  display: flex;
-  justify-content: center;
-  gap: 25px;
-}
-
-/* NÚT HẠT GIỐNG */
-.seed-btn {
-  position: relative;
-  width: 110px;
-  height: 125px;
-  background: white;
-  border: 2px solid #eceff1;
-  border-radius: 18px;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 5px 10px rgba(0,0,0,0.05);
-}
-
-.seed-btn:hover {
-  transform: translateY(-10px);
-  border-color: #29b6f6;
-  box-shadow: 0 15px 25px rgba(3, 169, 244, 0.2);
-}
-
-.seed-btn.active {
-  border-color: #76ff03;
-  background: #f1f8e9;
-  box-shadow: 0 0 15px rgba(118, 255, 3, 0.6);
-  transform: scale(1.1);
-}
-
-.seed-main-icon {
-  font-size: 3.5rem;
-  margin-bottom: 8px;
-  filter: drop-shadow(0 3px 2px rgba(0,0,0,0.1));
-}
-
-.seed-title {
-  font-weight: bold;
-  color: #546e7a;
-  font-size: 0.9rem;
-}
-
-/* --- TOOLTIP HOVER (Giữ nguyên logic ẩn hiện) --- */
-.seed-tooltip {
-  visibility: hidden;
-  opacity: 0;
-  position: absolute;
-  bottom: 125%;
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: rgba(38, 50, 56, 0.95);
-  color: #fff;
-  padding: 12px;
-  border-radius: 10px;
-  width: 190px;
-  z-index: 100;
-  text-align: left;
-  font-size: 0.85rem;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.3);
-  transition: opacity 0.2s ease-in-out, bottom 0.2s ease-in-out;
-  pointer-events: none;
-}
-
-.seed-tooltip::after {
-  content: "";
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  margin-left: -6px;
-  border-width: 6px;
-  border-style: solid;
-  border-color: rgba(38, 50, 56, 0.95) transparent transparent transparent;
-}
-
-.seed-btn:hover .seed-tooltip {
-  visibility: visible;
-  opacity: 1;
-  bottom: 135%;
-}
-
-.tip-row {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 6px;
-  border-bottom: 1px dashed rgba(255,255,255,0.15);
-  padding-bottom: 3px;
-}
-.tip-row:last-child { border: none; margin-bottom: 0; }
-
-.tip-label { color: #b0bec5; font-size: 0.8rem; }
-.tip-val { font-weight: bold; }
-
-.cost { color: #ff5252; }
-.profit { color: #69f0ae; }
-.xp { color: #e040fb; }
-.time { color: #40c4ff; }
-
-/* --- FARM GRID: Giao diện chậu cây trên mây --- */
-.farm-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 30px; /* Tăng khoảng cách để các chậu cây thoáng hơn */
-  /* Thay vì màu nâu đất, dùng màu nền trời nhẹ hoặc trong suốt */
-  background: rgba(255, 255, 255, 0.4); 
-  padding: 40px;
-  border-radius: 30px;
-  border: 2px dashed #b3e5fc;
-  margin-top: 20px;
-}
-
-/* Ô ĐẤT: Tạo hình giống chậu cây */
-.farm-slot {
-  background: #8d6e63; /* Màu chậu đất nung */
-  aspect-ratio: 1 / 1;
-  border-radius: 50%; /* Bo tròn thành chậu/bầu đất */
-  position: relative;
-  cursor: pointer;
-  border: 6px solid #6d4c41; /* Viền miệng chậu đậm hơn */
-  transition: all 0.3s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: visible; /* Để cây mọc vươn ra ngoài chậu */
-  box-shadow: 0 10px 15px rgba(0,0,0,0.1);
-}
-
-.farm-slot:hover {
-  transform: translateY(-8px) scale(1.05);
-  box-shadow: 0 15px 25px rgba(0,0,0,0.2);
-  border-color: #5d4037;
-}
-
-/* SỐ THỨ TỰ */
-.slot-number {
-  position: absolute;
-  bottom: -25px; /* Đưa số xuống dưới đáy chậu */
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 0.9rem;
-  color: #78909c;
-  font-weight: bold;
-}
-
-.empty-soil, .plant-content {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-
-/* ICON CÂY */
-.plant-icon {
-  font-size: 4.5rem; /* Cây to hơn */
-  margin-bottom: 10px; /* Đẩy cây lên cao chút */
-  filter: drop-shadow(0 5px 5px rgba(0,0,0,0.2));
-  animation: grow 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-/* ICON MÂY (Khi đất trống) */
-.soil-icon {
-  font-size: 3rem;
-  opacity: 0.8;
-  animation: float 3s ease-in-out infinite; /* Hiệu ứng mây bay nhẹ */
-}
-
-/* THANH THỜI GIAN */
-.plant-timer {
-  position: absolute;
-  bottom: -15px; /* Treo lơ lửng dưới chậu */
-  background: rgba(0,0,0,0.7);
-  color: white;
-  padding: 4px 12px;
-  border-radius: 15px;
-  font-size: 0.8rem;
-  min-width: 70px;
-  text-align: center;
-  z-index: 10;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-}
-
-.plant-timer.ready-text {
-  background: linear-gradient(45deg, #76ff03, #64dd17);
-  color: #1b5e20;
-  font-weight: bold;
-  animation: bounce 1s infinite;
-  border: 2px solid #fff;
-}
-
-/* NÚT XÓA CÂY */
-.remove-btn {
-  position: absolute;
-  top: 0;
-  right: -5px;
-  width: 28px;
-  height: 28px;
-  background: #ff5252;
-  color: white;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.8rem;
-  cursor: pointer;
+/* --- GAMEPLAY AREA --- */
+.gameplay-area {
+  position: absolute; top: 0; left: 15vmin;
+  width: calc(100% - 15vmin); height: 100%;
   z-index: 20;
-  border: 2px solid white;
-  box-shadow: 0 3px 6px rgba(0,0,0,0.2);
-  transition: all 0.2s;
+  display: flex; flex-direction: column;
+  justify-content: center; align-items: center;
+  padding-bottom: 12vmin; gap: 6vmin; /* Khoảng cách giữa các tầng */
 }
 
-.remove-btn:hover { background: #d50000; transform: scale(1.15); }
+/* TẦNG MÂY */
+.cloud-floor-row {
+  position: relative; width: 90%; max-width: 1000px; height: 18vmin;
+  display: flex; justify-content: center; align-items: flex-end;
+}
+
+.cloud-bg {
+  position: absolute; bottom: 0; left: 0; width: 100%; height: 120%;
+  background-image: url('/assets/game/cloud-floor.png');
+  background-size: 100% 100%; background-repeat: no-repeat;
+  z-index: 0; opacity: 0.95;
+}
+
+.pots-container {
+  position: relative; z-index: 1;
+  display: flex; gap: 4vmin; margin-bottom: 4vmin;
+}
+
+/* --- CHẬU CÂY --- */
+.pot-wrapper {
+  position: relative; width: 12vmin; height: 12vmin;
+  cursor: pointer; transition: transform 0.2s;
+}
+.pot-wrapper:hover { transform: scale(1.1); }
+
+/* Lớp ảnh chậu */
+.pot-img-layer {
+  position: absolute; bottom: 0; left: 0; width: 100%; height: 100%;
+  background-image: url('/assets/game/pot.png');
+  background-size: contain; background-repeat: no-repeat; background-position: bottom center;
+  z-index: 2; /* Nằm đè lên gốc cây */
+}
+.slot-num {
+  position: absolute; bottom: 15%; left: 50%; transform: translateX(-50%);
+  font-size: 1.5vmin; color: rgba(255,255,255,0.5); font-weight: bold;
+}
+
+/* Lớp Cây */
+.plant-layer {
+  position: absolute; bottom: 35%; /* Cây mọc từ độ cao này */
+  left: 0; width: 100%;
+  display: flex; justify-content: center;
+  z-index: 1; /* Nằm sau chậu */
+  height: 20vmin; pointer-events: none;
+}
+
+/* Ảnh cây động */
+.plant-img-dynamic {
+  height: 100%; width: auto; /* Tự động co giãn theo chiều cao */
+  filter: drop-shadow(0 2px 2px rgba(0,0,0,0.3));
+  transform-origin: bottom center;
+  animation: sway 3s ease-in-out infinite;
+}
+
+/* Khi chín */
+.plant-layer.ready .plant-img-dynamic {
+  animation: bounceReady 1s infinite;
+  filter: drop-shadow(0 0 1vmin gold);
+}
+
+.glow-effect {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: 12vmin; height: 12vmin;
+  background: radial-gradient(circle, rgba(255,255,0,0.5) 0%, rgba(255,255,0,0) 70%);
+  border-radius: 50%; z-index: -1; animation: pulse 1.5s infinite;
+}
+
+/* Timer */
+.timer-tag {
+  position: absolute; bottom: -1vmin; left: 50%; transform: translateX(-50%);
+  background: rgba(0,0,0,0.7); color: white;
+  padding: 0.5vmin 1vmin; border-radius: 10px;
+  font-size: 1.5vmin; z-index: 10; white-space: nowrap;
+}
+.ready-tag { background: #76ff03; color: #1b5e20; font-weight: bold; }
+
+/* Nút xóa */
+.remove-btn {
+  position: absolute; top: 0; right: 0; z-index: 20;
+  background: red; color: white; width: 3vmin; height: 3vmin;
+  border-radius: 50%; font-size: 1.8vmin; display: flex; align-items: center; justify-content: center;
+  border: 2px solid white; display: none;
+}
+.pot-wrapper:hover .remove-btn { display: flex; }
+
+/* --- UI GÓC PHẢI --- */
+.ui-top-right {
+  position: absolute; top: 2vmin; right: 2vmin; z-index: 100;
+  display: flex; flex-direction: column; align-items: flex-end; gap: 1vmin;
+}
+.gold-badge {
+  background: rgba(0,0,0,0.5); color: #ffca28;
+  padding: 0.8vmin 2vmin; border-radius: 20px; border: 2px solid rgba(255,255,255,0.8);
+  font-weight: bold; font-size: 2vmin; display: flex; align-items: center; gap: 5px;
+}
+.level-row { display: flex; align-items: center; }
+.exp-bar-box {
+  background: white; padding: 0.5vmin 3vmin 0.5vmin 1vmin;
+  border-radius: 15px 0 0 15px; margin-right: -2vmin;
+  position: relative; height: 3.5vmin; display: flex; align-items: center;
+}
+.exp-bar { width: 18vmin; height: 1.2vmin; background: #eee; border-radius: 5px; overflow: hidden; }
+.exp-fill { height: 100%; background: #2196f3; transition: width 0.3s; }
+.exp-text {
+  position: absolute; top: -2vmin; left: 0; width: 100%; text-align: center;
+  font-size: 1.2vmin; font-weight: bold; color: white; text-shadow: 0 0 2px black;
+}
+.level-star {
+  width: 7vmin; height: 7vmin;
+  background: radial-gradient(circle, #ffca28, #ff6f00);
+  border: 0.5vmin solid white; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: bold; color: white; font-size: 3vmin; z-index: 2;
+}
+
+/* --- TOOLBAR --- */
+.ui-bottom {
+  position: absolute; bottom: 2vmin; left: 0; width: 100%;
+  display: flex; justify-content: center; z-index: 100;
+}
+.toolbar-bg {
+  background: rgba(255,255,255,0.95); padding: 1vmin 2vmin;
+  border-radius: 20px; display: flex; gap: 2vmin; border: 2px solid white;
+  max-width: 90vw; overflow-x: auto; /* Cho phép cuộn ngang nếu nhiều hạt giống */
+}
+.seed-btn {
+  width: 9vmin; height: 9vmin; background: white; border: 2px solid #cfd8dc;
+  border-radius: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  position: relative; transition: transform 0.2s; flex-shrink: 0;
+}
+.seed-btn.active { border-color: #76ff03; background: #f1f8e9; transform: scale(1.1); }
+
+.shop-item-img {
+    width: 80%; height: 80%; object-fit: contain;
+}
+
+/* Tooltip */
+.seed-tooltip {
+  visibility: hidden; opacity: 0; position: absolute;
+  bottom: 110%; left: 50%; transform: translateX(-50%);
+  background: rgba(33, 33, 33, 0.95); color: white;
+  width: 22vmin; padding: 1vmin; border-radius: 10px;
+  text-align: left; transition: opacity 0.2s; pointer-events: none; z-index: 200;
+}
+.seed-btn:hover .seed-tooltip { visibility: visible; opacity: 1; bottom: 125%; }
+.tip-title { font-weight: bold; color: #ffca28; border-bottom: 1px solid #555; margin-bottom: 5px; text-align: center; font-size: 1.5vmin;}
+.tip-info { display: flex; justify-content: space-between; font-size: 1.2vmin; gap: 10px; }
+.cost { color: #ff5252; } .profit { color: #69f0ae; }
 
 /* ANIMATIONS */
-@keyframes grow { from { transform: scale(0) translateY(20px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
-@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
-@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+@keyframes sway { 0%,100% { transform: rotate(0deg); } 50% { transform: rotate(5deg); } }
+@keyframes bounceReady { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-1vmin); } }
+@keyframes pulse { 0% { opacity: 0.5; transform: translate(-50%, -50%) scale(0.8); } 50% { opacity: 0.8; transform: translate(-50%, -50%) scale(1.2); } 100% { opacity: 0.5; transform: translate(-50%, -50%) scale(0.8); } }
+.shop-trigger-btn {
+  position: absolute; bottom: 3vmin; right: 3vmin; z-index: 100;
+  width: 10vmin; height: 10vmin;
+  background: radial-gradient(circle, #ffca28, #ff6f00);
+  border-radius: 50%;
+  border: 0.5vmin solid white;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  cursor: pointer; transition: transform 0.2s;
+  color: white; font-weight: bold; font-size: 1.2vmin;
+}
+.shop-trigger-btn:hover { transform: scale(1.1); }
+.shop-icon-img { font-size: 4vmin; margin-bottom: -0.5vmin; }
+
+.current-seed-badge {
+    position: absolute; top: -1vmin; left: -1vmin;
+    width: 4vmin; height: 4vmin; background: white; border-radius: 50%;
+    border: 2px solid #4caf50; overflow: hidden;
+}
+.current-seed-badge img { width: 100%; height: 100%; object-fit: contain; }
+
+/* --- SHOP MODAL (POPUP) --- */
+.shop-modal-overlay {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.6); z-index: 200;
+  display: flex; align-items: center; justify-content: center;
+  backdrop-filter: blur(3px);
+}
+
+.shop-modal-content {
+  width: 70vmin; max-height: 80vh;
+  background: #fff9c4;
+  border-radius: 20px;
+  border: 1vmin solid #8d6e63;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+  animation: popup 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.shop-header {
+  background: #8d6e63; color: white; padding: 1.5vmin;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.shop-header h2 { margin: 0; font-size: 2.5vmin; }
+.close-shop {
+  background: red; border: none; color: white; width: 4vmin; height: 4vmin;
+  border-radius: 50%; cursor: pointer; font-weight: bold;
+}
+
+.shop-grid {
+  padding: 2vmin;
+  display: grid; grid-template-columns: repeat(4, 1fr); /* 4 cột */
+  gap: 2vmin;
+  overflow-y: auto;
+}
+
+/* Shop Item Card */
+.shop-item {
+  background: white; border-radius: 10px; padding: 1vmin;
+  border: 2px solid #ddd; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; gap: 0.5vmin;
+  transition: all 0.2s; position: relative;
+}
+.shop-item:hover { transform: translateY(-3px); border-color: #2196f3; }
+.shop-item.active { border-color: #76ff03; background: #f1f8e9; box-shadow: 0 0 10px #76ff03; }
+
+/* Trạng thái bị khóa */
+.shop-item.locked {
+  filter: grayscale(1); opacity: 0.8; cursor: not-allowed;
+}
+.lock-overlay {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.5); border-radius: 8px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  color: white; font-weight: bold; font-size: 2vmin; z-index: 10;
+}
+
+.item-icon { width: 8vmin; height: 8vmin; }
+.item-icon img { width: 100%; height: 100%; object-fit: contain; }
+
+.item-name { font-weight: bold; font-size: 1.5vmin; color: #5d4037; }
+.item-stats { display: flex; gap: 1vmin; font-size: 1.2vmin; }
+.cost { color: red; font-weight: bold; }
+.time { color: blue; }
+
+@keyframes popup { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
