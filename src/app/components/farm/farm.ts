@@ -11,20 +11,14 @@ import { GameService } from '../../services/game.service';
 })
 export class FarmComponent implements OnInit, OnDestroy {
   farmData: any = null;
-  selectedSeed: string = 'CARROT';
+  selectedSeed: string = ''; 
   private timer: any;
 
-  // Dữ liệu cấu hình lấy từ Backend
   gameConfig: any = null; 
   plantKeys: string[] = [];
-
-  // --- SỬA LỖI Ở ĐÂY ---
-  // Khai báo trực tiếp CONFIG để HTML sử dụng (không cần import file ngoài)
-  readonly CONFIG = {
-    CURRENCY: '💰',
-    EXP_UNIT: '⭐'
-  };
-  // ---------------------
+  
+  // Biến điều khiển bật/tắt Shop
+  isShopOpen: boolean = false;
 
   constructor(private gameService: GameService) {}
 
@@ -36,20 +30,35 @@ export class FarmComponent implements OnInit, OnDestroy {
     if (this.timer) clearInterval(this.timer);
   }
 
-  // 1. Khởi tạo: Lấy Config từ Backend trước
+  toggleShop() {
+    this.isShopOpen = !this.isShopOpen;
+  }
+
+  selectSeed(key: string) {
+    const plant = this.gameConfig.plants[key];
+    // Kiểm tra level xem có đủ trình độ để chọn không
+    if (this.farmData.level < plant.unlockLevel) {
+      alert(`Bạn cần đạt Level ${plant.unlockLevel} để trồng cây này!`);
+      return;
+    }
+    this.selectedSeed = key;
+    this.isShopOpen = false; // Chọn xong thì đóng shop
+  }
+
   initGameData() {
     this.gameService.getGameConfig().subscribe({
       next: (config) => {
         this.gameConfig = config;
         this.plantKeys = Object.keys(this.gameConfig.plants);
         
-        // Map thêm icon vào dữ liệu từ Backend
-        this.enrichConfigData();
+        // Mặc định chọn hạt giống đầu tiên (nếu có và đủ level)
+        // Logic chọn hạt mặc định có thể tùy chỉnh sau
+        if (this.plantKeys.length > 0) {
+            this.selectedSeed = this.plantKeys[0];
+        }
 
-        // Có config rồi mới tải nông trại
+        this.enrichConfigData();
         this.loadFarm();
-        
-        // Chạy đồng hồ
         this.timer = setInterval(() => this.updateTimers(), 1000);
       },
       error: (err) => console.error('Lỗi tải config:', err)
@@ -57,18 +66,16 @@ export class FarmComponent implements OnInit, OnDestroy {
   }
 
   enrichConfigData() {
-    const uiData: any = {
-      'CARROT': { icon: '🥕', name: 'Cà rốt' },
-      'TOMATO': { icon: '🍅', name: 'Cà chua' },
-      'CORN':   { icon: '🌽', name: 'Bắp' }
-    };
-
     this.plantKeys.forEach(key => {
-      if (this.gameConfig.plants[key]) {
-        this.gameConfig.plants[key] = { 
-          ...this.gameConfig.plants[key], 
-          ...uiData[key] 
-        };
+      const plant = this.gameConfig.plants[key];
+      if (plant) {
+        plant.displayName = key; 
+        
+        // --- QUAN TRỌNG: ĐƯỜNG DẪN ẢNH ---
+        // key: Tên Folder (từ DB, ví dụ "Beet")
+        // key.toLowerCase(): Tên file (ví dụ "beet")
+        // Đường dẫn: assets/game/plants/Beet/beet_5.png
+        plant.shopIcon = `assets/game/plants/${key}/${key.toLowerCase()}_${plant.totalStages}.png`;
       }
     });
   }
@@ -97,41 +104,67 @@ export class FarmComponent implements OnInit, OnDestroy {
     this.farmData.slots.forEach((slot: any) => {
       if (slot.plantType) {
         const info = this.gameConfig.plants[slot.plantType];
-        // Backend trả về 'growTime'
-        const growTime = info ? info.growTime : 0; 
-        const finishTime = slot.plantedAt + growTime;
+        
+        if (!info) {
+            slot.displayStatus = 'ERROR'; 
+            return;
+        }
 
-        if (now >= finishTime) {
+        const growTime = info.growTime; 
+        const finishTime = slot.plantedAt + growTime;
+        const timeElapsed = now - slot.plantedAt;
+        const totalStages = info.totalStages || 1;
+
+        let currentStage = 1;
+
+        if (timeElapsed >= growTime) {
+          currentStage = totalStages;
           slot.displayStatus = 'READY';
           slot.displayLabel = 'Thu hoạch!';
         } else {
           slot.displayStatus = 'GROWING';
+          if (totalStages > 1) {
+              const stageDuration = growTime / (totalStages - 1);
+              const stageCalc = 1 + Math.floor(timeElapsed / stageDuration);
+              currentStage = Math.min(stageCalc, totalStages - 1);
+          }
+
           const secondsLeft = Math.ceil((finishTime - now) / 1000);
-          
           const m = Math.floor(secondsLeft / 60);
           const s = secondsLeft % 60;
           slot.displayLabel = `${m}:${s < 10 ? '0' : ''}${s}`;
         }
+
+        // --- QUAN TRỌNG: ĐƯỜNG DẪN ẢNH TRÊN CÂY ---
+        // assets/game/plants/Beet/beet_1.png
+        slot.currentImage = `assets/game/plants/${slot.plantType}/${slot.plantType.toLowerCase()}_${currentStage}.png`;
+
       } else {
         slot.displayStatus = 'EMPTY';
+        slot.currentImage = null;
       }
     });
   }
 
-  // --- Getters hiển thị ---
+  // ... (Giữ nguyên các Getter cloudFloors, expProgress...)
+  get cloudFloors() {
+    if (!this.farmData || !this.farmData.slots) return [];
+    const chunkSize = 6; 
+    const floors = [];
+    for (let i = 0; i < this.farmData.slots.length; i += chunkSize) {
+      floors.push(this.farmData.slots.slice(i, i + chunkSize));
+    }
+    return floors;
+  }
 
   get expProgress(): number {
     if (!this.farmData || !this.gameConfig) return 0;
     const currentLvl = this.farmData.level;
     const levels = this.gameConfig.levels;
-    
     const startExp = levels[currentLvl - 1] || 0;
     const nextExp = levels[currentLvl] || startExp;
-
     if (nextExp === startExp) return 100;
-    
-    const percent = ((this.farmData.exp - startExp) / (nextExp - startExp)) * 100;
-    return Math.min(100, Math.max(0, percent));
+    return Math.min(100, Math.max(0, ((this.farmData.exp - startExp) / (nextExp - startExp)) * 100));
   }
 
   get nextLevelExp(): any {
@@ -139,21 +172,30 @@ export class FarmComponent implements OnInit, OnDestroy {
     return this.gameConfig.levels[this.farmData.level] || 'MAX';
   }
 
-  get nextLevelReward(): number {
-    if (!this.farmData || !this.gameConfig) return 0;
-    return this.gameConfig.rewards[this.farmData.level] || 0;
-  }
-
-  // --- Click Events ---
+  // --- EVENTS ---
 
   onSlotClick(slot: any) {
     if (slot.displayStatus === 'EMPTY') {
-      const plantInfo = this.gameConfig.plants[this.selectedSeed];
       
-      // Backend trả về 'buyPrice'
+      // Nếu chưa chọn hạt giống
+      if (!this.selectedSeed) {
+        this.isShopOpen = true; // Mở shop bắt người dùng chọn
+        return;
+      }
+
+      const plantInfo = this.gameConfig.plants[this.selectedSeed];
+      if (!plantInfo) return;
+
+      // Check tiền
       if (this.farmData.gold < plantInfo.buyPrice) {
         alert(`Không đủ tiền! Cần ${plantInfo.buyPrice} vàng.`);
         return;
+      }
+      
+      // Check lại level lần nữa (backend cũng nên check)
+      if (this.farmData.level < plantInfo.unlockLevel) {
+         alert(`Level chưa đủ!`);
+         return;
       }
 
       this.gameService.plantSeed(slot.slotId, this.selectedSeed).subscribe({
@@ -162,7 +204,7 @@ export class FarmComponent implements OnInit, OnDestroy {
           this.sortSlots();
           this.updateTimers();
         },
-        error: (err) => alert(err.error?.message)
+        error: (err) => alert(err.error?.message || 'Lỗi kết nối')
       });
     } else if (slot.displayStatus === 'READY') {
       this.gameService.harvest(slot.slotId).subscribe({
@@ -171,7 +213,7 @@ export class FarmComponent implements OnInit, OnDestroy {
           this.sortSlots();
           this.updateTimers();
         },
-        error: (err) => alert(err.error?.message)
+        error: (err) => alert(err.error?.message || 'Lỗi kết nối')
       });
     }
   }

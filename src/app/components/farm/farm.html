@@ -1,70 +1,81 @@
-<div class="game-container" *ngIf="farmData">
+<div class="game-wrapper" *ngIf="farmData">
+
+  <div class="bg-layer"></div>
+  <div class="beanstalk-layer"></div>
   
-  <div class="game-header">
-    <h2>☁️ Khu Vườn (Lv. {{ farmData.level }})</h2>
-    <div class="resources">
-      <span class="gold-badge">{{ CONFIG.CURRENCY }} {{ farmData.gold }}</span>
-      <span class="exp-badge">{{ CONFIG.EXP_UNIT }} {{ farmData.exp }}</span>
+  <div class="gameplay-area">
+    <div class="cloud-floor-row" *ngFor="let floor of cloudFloors; let i = index">
+      <div class="cloud-bg"></div>
+      <div class="pots-container">
+        <div class="pot-wrapper" *ngFor="let slot of floor" (click)="onSlotClick(slot)">
+          <div *ngIf="slot.plantType" class="remove-btn" (click)="onRemovePlant($event, slot.slotId)">❌</div>
+          
+          <div class="plant-layer" [class.ready]="slot.displayStatus === 'READY'">
+            <img *ngIf="slot.plantType && slot.currentImage" 
+                 [src]="slot.currentImage" 
+                 class="plant-img-dynamic" 
+                 alt="plant">
+            <div *ngIf="slot.displayStatus === 'READY'" class="glow-effect"></div>
+          </div>
+
+          <div class="pot-img-layer"><span class="slot-num">{{ slot.slotId + 1 }}</span></div>
+          <div *ngIf="slot.plantType" class="timer-tag" [class.ready-tag]="slot.displayStatus === 'READY'">{{ slot.displayLabel }}</div>
+        </div>
+      </div>
     </div>
   </div>
 
-  <div class="toolbar-container" *ngIf="gameConfig"> 
-    <div class="toolbar">
-      
-      <button *ngFor="let key of plantKeys" 
-              class="seed-btn"
-              (click)="selectedSeed = key" 
-              [class.active]="selectedSeed === key">
-        
-        <div class="seed-main-icon">{{ gameConfig.plants[key].icon }}</div>
-        <div class="seed-title">{{ gameConfig.plants[key].name }}</div>
-
-        <div class="seed-tooltip">
-          <div class="tip-row">
-            <span class="tip-label">Thời gian:</span>
-            <span class="tip-val time">
-                {{ gameConfig.plants[key].growTime / 1000 }}s
-            </span>
-          </div>
-          <div class="tip-row">
-            <span class="tip-label">Giá mua:</span>
-            <span class="tip-val cost">-{{ gameConfig.plants[key].buyPrice }}</span>
-          </div>
-          <div class="tip-row">
-            <span class="tip-label">Giá bán:</span>
-            <span class="tip-val profit">+{{ gameConfig.plants[key].sellPrice }}</span>
-          </div>
-          <div class="tip-row">
-            <span class="tip-label">Kinh nghiệm:</span>
-            <span class="tip-val xp">+{{ gameConfig.plants[key].expReward }} XP</span>
-          </div>
-        </div>
-      </button>
-
+  <div class="ui-top-right">
+    <div class="resource-row">
+      <div class="gold-badge"><span class="icon">💰</span> {{ farmData.gold }}</div>
+    </div>
+    <div class="level-row">
+      <div class="exp-bar-box">
+        <div class="exp-text">{{ farmData.exp }} / {{ nextLevelExp }} XP</div>
+        <div class="exp-bar"><div class="exp-fill" [style.width.%]="expProgress"></div></div>
+      </div>
+      <div class="level-star"><span>{{ farmData.level }}</span></div>
     </div>
   </div>
 
-  <div class="farm-grid" *ngIf="gameConfig">
-    <div *ngFor="let slot of farmData.slots" 
-         class="farm-slot" 
-         (click)="onSlotClick(slot)"
-         [class.ready]="slot.displayStatus === 'READY'">
+  <div class="shop-trigger-btn" (click)="toggleShop()">
+    <div class="shop-icon-img">🏪</div>
+    <span>Cửa Hàng</span>
+    <div class="current-seed-badge" *ngIf="selectedSeed">
+        <img [src]="gameConfig.plants[selectedSeed]?.shopIcon">
+    </div>
+  </div>
+
+  <div class="shop-modal-overlay" *ngIf="isShopOpen" (click)="toggleShop()">
+    <div class="shop-modal-content" (click)="$event.stopPropagation()">
       
-      <div *ngIf="slot.plantType" class="remove-btn" (click)="onRemovePlant($event, slot.slotId)" title="Bỏ cây">❌</div>
-
-      <span class="slot-number">{{ slot.slotId + 1 }}</span>
-
-      <div *ngIf="slot.plantType" class="plant-content">
-        <div class="plant-icon">
-            {{ gameConfig.plants[slot.plantType]?.icon }}
-        </div>
-        <span class="plant-timer" [class.ready-text]="slot.displayStatus === 'READY'">
-            {{ slot.displayLabel }}
-        </span>
+      <div class="shop-header">
+        <h2>🛍️ Cửa Hàng Hạt Giống</h2>
+        <button class="close-shop" (click)="toggleShop()">✖</button>
       </div>
 
-      <div *ngIf="!slot.plantType" class="empty-soil">
-        <div class="soil-icon">☁️</div>
+      <div class="shop-grid">
+        <div *ngFor="let key of plantKeys" 
+             class="shop-item" 
+             [class.active]="selectedSeed === key"
+             [class.locked]="farmData.level < gameConfig.plants[key].unlockLevel"
+             (click)="selectSeed(key)">
+
+             <div class="lock-overlay" *ngIf="farmData.level < gameConfig.plants[key].unlockLevel">
+                🔒 <span style="font-size: 0.8rem">Lv.{{ gameConfig.plants[key].unlockLevel }}</span>
+             </div>
+
+             <div class="item-icon">
+                <img [src]="gameConfig.plants[key].shopIcon">
+             </div>
+             
+             <div class="item-name">{{ gameConfig.plants[key].displayName }}</div>
+             
+             <div class="item-stats">
+                 <span class="cost">💰 {{ gameConfig.plants[key].buyPrice }}</span>
+                 <span class="time">⏳ {{ gameConfig.plants[key].growTime / 1000 }}s</span>
+             </div>
+        </div>
       </div>
 
     </div>
