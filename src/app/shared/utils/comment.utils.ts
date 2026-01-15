@@ -7,7 +7,7 @@ export class CommentUtils {
     const map = new Map();
     const roots: any[] = [];
     
-    // Deep copy để tránh tham chiếu vòng và giữ nguyên dữ liệu gốc nếu cần
+    // Deep copy tránh tham chiếu vòng và giữ nguyên dữ liệu gốc
     const comments = flatComments.map(c => ({ ...c, children: [] }));
 
     comments.forEach(c => map.set(c.id, c));
@@ -18,7 +18,6 @@ export class CommentUtils {
         if (parent) {
           parent.children.push(c);
         } else {
-          // Trường hợp lỗi data (có parentId nhưng không tìm thấy cha), cho làm root tạm
           roots.push(c);
         }
       } else {
