@@ -39,6 +39,7 @@ export class HomeComponent extends BasePostComponent implements OnInit, OnDestro
   // Delete Modal
   showDeleteModal: boolean = false;
   postIdToDelete: number | null = null;
+expandedSection: any;
 
   constructor(private webSocketService: WebSocketService) {
     super();
