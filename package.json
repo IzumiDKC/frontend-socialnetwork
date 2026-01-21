@@ -1,6 +1,6 @@
 {
   "name": "frontend-socialnetwork",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
@@ -31,6 +31,7 @@
     "@angular/platform-server": "^20.3.0",
     "@angular/router": "^20.3.0",
     "@angular/ssr": "^20.3.9",
+    "@stomp/rx-stomp": "^2.3.0",
     "@stomp/stompjs": "^7.2.1",
     "express": "^5.1.0",
     "keycloak-angular": "^20.0.0",
